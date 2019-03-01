@@ -7,6 +7,8 @@
 #include <types.h>
 
 int errno;
+//void en C simboliza que hay 0 parametros seguro.
+void perror(void);
 
 void itoa(int a, char *b)
 {
