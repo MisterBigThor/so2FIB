@@ -1,0 +1,9 @@
+#!/bin/bash   
+
+mkdir miZeOS
+cd miZeOS
+git init
+git config --global user.name "MisterBigThor"
+git config --global user.email "vcr97@gmail.com"
+git remote add origin https://github.com/MisterBigThor/so2FIB.git
+git pull origin master
