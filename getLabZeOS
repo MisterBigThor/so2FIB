@@ -1,9 +1,17 @@
 #!/bin/bash   
 
+#working directory @ miZeOS
 mkdir miZeOS
 cd miZeOS
+#get git content:
 git init
 git config --global user.name "MisterBigThor"
 git config --global user.email "vcr97@gmail.com"
 git remote add origin https://github.com/MisterBigThor/so2FIB.git
 git pull origin master
+
+#store password:
+git config credential.helper store
+
+#sym link for testing
+ln -s libjp1.a E1/libjp1.a
