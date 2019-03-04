@@ -12,7 +12,7 @@ main(void)
 	char * buffer = "aaa";
 	int size = 4;
 	write(1222, buffer, size);
-	//runjp();
+	runjp();
 	//runjp_rank(3,10);
 	while(1) { }
 }
