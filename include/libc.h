@@ -20,4 +20,5 @@ int fork();
 
 void exit();
 
+void perror(void);
 #endif  /* __LIBC_H__ */
