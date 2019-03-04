@@ -8,40 +8,50 @@
       pushl %fs; \
       pushl %es; \
       pushl %ds; \
+      pushl %eax; \
       pushl %ebp; \
       pushl %edi; \
       pushl %esi; \
-      pushl %ebx; 
-     
+      pushl %edx; \
+      pushl %ecx; \
+      pushl %ebx; \
+      movl $__KERNEL_DS, %edx;    \
+      movl %edx, %ds;           \
+      movl %edx, %es
+
 
 #define RESTORE_ALL \
-	popl %ebx; \
-	popl %esi; \
-	popl %edi; \
-	popl %ebp; \
-	popl %ds; \
-	popl %es; \
-	popl %fs; \
-	popl %gs; 
+      popl %ebx;\
+      popl %ecx;\
+      popl %edx;\
+      popl %esi;\
+      popl %edi;\
+      popl %ebp;\
+      popl %eax;\
+      popl %ds; \
+      popl %es; \
+      popl %fs; \
+      popl %gs
+
 
 ENTRY(write)
 	push %ebp;
 	movl %esp, %ebp; //ebp <= esp
-	SAVE_ALL
+  push %ebx;
 	movl 8(%ebp), %ebx 	//pasar a registres els parametres
 	movl 12(%ebp), %ecx
 	movl 16(%ebp), %edx
-	movl $4, %eax 	//identificador de llamada
-	int $0x80;
- 	cmpl $0, %EAX
-	jl err;
-err:	
-	movl %eax, errno;
+  movl $4, %eax;
+	SYSCALL
+ 	cmpl $0, %eax;
+  jge fi
+err:
+  negl %eax
+  movl %eax, errno;
+  leal errno, %ebx
+  movl %eax, (%ebx) //actualizar errno
+  movl -1, %eax //retornara -1
 fi:
-	RESTORE_ALL
-	pop %ebp;	
+	pop %ebx
+	pop %ebp;
 	ret;
-
-
-
-
