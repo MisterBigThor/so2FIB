@@ -65,7 +65,7 @@ outb %al, $0x20;
 	popl %ds; \
 	popl %es; \
 	popl %fs; \
-	popl %gs; \
+	popl %gs;
 
 
 ENTRY(keyboard_handler)
@@ -74,17 +74,29 @@ ENTRY(keyboard_handler)
 	EOI
 	RESTORE_ALL
 	iret
+
 ENTRY(system_call_handler)
+	push $__USER_DS
+	push %ebp
+	pushfl
+	push $__USER_CS
+	push 4(%ebp)
 	SAVE_ALL
 	cmpl $0, %EAX
-	jl err
+	jl sysenter_err
 	cmpl $MAX_SYSCALL, %EAX
-	jg err
+	jg sysenter_err
 	call *sys_call_table(, %eax, 0x04)
-	jmp fin
-err:
-	movl $-4, %EAX
-fin:
-	movl %EAX, 0X18(%esp)
+	jmp sysenter_fin
+sysenter_err:
+	movl $-ENOSYS, %EAX
+sysenter_fin:
+	movl %EAX, 0x18(%esp)
 	RESTORE_ALL
-	iret
+	movl (%esp), %edx
+	movl 12(%esp), %ecx
+	sti
+	sysexit
+
+
+
