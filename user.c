@@ -11,7 +11,8 @@ main(void)
      /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 	char * buffer = "aaa";
 	int size = 4;
-	write(1222, buffer, size);
+	write(1, buffer, size);
+	perror();
 	runjp();
 	//runjp_rank(3,10);
 	while(1) { }
