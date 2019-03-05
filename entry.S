@@ -74,6 +74,7 @@ ENTRY(keyboard_handler)
 	EOI
 	RESTORE_ALL
 	iret
+
 //"v1"
 ENTRY(system_call_handler)
 	SAVE_ALL;
@@ -86,7 +87,7 @@ ENTRY(system_call_handler)
 err:
   movl $-ENOSYS, %eax;
 fin:
-  movl %eax, 18(%esp);
+  movl %eax, 0x18(%esp);
 	RESTORE_ALL;
 	iret;
 

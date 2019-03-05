@@ -12,6 +12,7 @@
 #include <mm_address.h>
 
 #include <sched.h>
+#include <errno.h>
 
 #define LECTURA 0
 #define ESCRIPTURA 1
@@ -19,8 +20,8 @@
 
 int check_fd(int fd, int permissions)
 {
-  if (fd!=1) return -9; /*EBADF*/
-  if (permissions!=ESCRIPTURA) return -13; /*EACCES*/
+  if (fd!=1) return -EBADF; /*EBADF*/
+  if (permissions!=ESCRIPTURA) return -EACCES; /*EACCES*/
   return 0;
 }
 
@@ -42,13 +43,23 @@ int sys_fork()
 
   return PID;
 }
-
+#define SECCION 64
 int sys_write(int fd, char * buffer, int size){
-
 	if(check_fd(fd, ESCRIPTURA) != 0) return check_fd(fd, ESCRIPTURA);
-	if(buffer == NULL) return -45; /*Buffer a null*/
-	if(size < 0) return -14; /*TAMAÑO NEGATIVO*/
-	else return sys_write_console(buffer, size);
+	if(buffer == NULL) return -EFAULT;
+	if(size < 0) return -EINVAL;
+  char aux[SECCION];
+  int i = 0;
+  int escrito = 0;
+  while(i<(size-SECCION)){
+    copy_from_user(buffer+i, aux, SECCION);
+    escrito += sys_write_console(aux, SECCION);
+    i += SECCION;
+  }
+  int restant = size - i;
+  copy_from_user(buffer+i, aux, restant);
+  escrito += sys_write_console(aux, restant);
+  return escrito;
 }
 
 void sys_exit()

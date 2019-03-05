@@ -26,17 +26,48 @@ fi:
 	pop %ebp;
 	ret;
 
+ENTRY(SysBad)
+	push %ebp;
+	movl %esp, %ebp;
+
+	push %ebx;
+	push %ecx;
+	push %edx;
+	push %edi;
+	push %esi;
+	push %eax;
+	movl $0x0c, %eax;
+	int $0x80;
+
+	cmpl $0, %eax;
+	jge fibad;
+errbad:
+	negl %eax;
+	movl %eax, errno;
+	movl $-1, (%esp) //retornara pq es error -1
+fibad:
+	pop %eax;
+	pop %esi; // RESTORE_ALL
+	pop %edi;
+	pop %edx;
+	pop %ecx;
+	pop %ebx;
+	pop %ebp;
+	ret;
+
+
 
 ENTRY(write)
 	//enllaç dinàmic
 	push %ebp;
 	movl %esp, %ebp;
 	//salvar registres:
-	push %ebx;
+ 	push %ebx;
 	push %ecx;
 	push %edx;
 	push %edi;
 	push %esi;
+	push %eax;
 	//pasar a registres els parametres
 	movl 8(%ebp), %ebx
 	movl 12(%ebp), %ecx
@@ -45,13 +76,15 @@ ENTRY(write)
 	movl $0x04, %eax;
 	int $0x80;
 	//resultat per %eax
- 	cmpl $0, %eax;
+returntrap:
+	cmpl $0, %eax;
 	jge fitrap;
 errtrap:
 	negl %eax;
 	movl %eax, errno;
-	movl -1, %eax //retornara pq es error -1
+	movl $-1, (%esp) //retornara pq es error -1
 fitrap:
+	pop %eax;
 	pop %esi; // RESTORE_ALL
 	pop %edi;
 	pop %edx;

@@ -3,19 +3,30 @@
  */
 
 #include <libc.h>
-
+#include <errno.h>
 #include <types.h>
 
 int errno;
 //void en C simboliza que hay 0 parametros seguro.
 void perror(void){
-  char * buffer;
   switch (errno) {
-    case -38:
-      buffer = "NOSYSCALL \n";
-      write(1, buffer, 16);
+    case ENOSYS:
+      write(1, "No existe syscall", 64);
+      break;
+    case EBADF:
+      write(1, "Mal descriptor", 64);
+      break;
+    case EACCES:
+      write(1, "No acceso", 64);
+      break;
+    case BADSIZE:
+      write(1, "mal tamaño", 10);
+      break;
+    default:
+      write(1, "no error", 10);
       break;
   }
+
 }
 
 void itoa(int a, char *b)
