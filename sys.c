@@ -26,7 +26,6 @@ int check_fd(int fd, int permissions)
 
 int sys_ni_syscall()
 {
-	//AQUI SE LLEGARA SI NO ESTA DEFINIDA LA SYSCALL
 	return -38; /*ENOSYS*/	
 }
 

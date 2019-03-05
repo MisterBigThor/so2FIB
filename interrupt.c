@@ -11,8 +11,7 @@
 
 Gate idt[IDT_ENTRIES];
 Register    idtR;
-void keyboard_handler();
-void system_call_handler();
+
 char char_map[] =
 {
   '\0','\0','1','2','3','4','5','6',
@@ -101,9 +100,15 @@ void setIdt()
 
 	set_handlers();
 	/* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
+	writeMsr(0x174,__KERNEL_CS);
+	writeMsr(0x175,INITIAL_ESP);
+	writeMsr(0x176, (int)syscall_handler_sysenter);
 	/*INICIALIZAR TALBA IDT*/
 	setInterruptHandler(33, keyboard_handler, 0);
-	setInterruptHandler(0x80, system_call_handler, 3);
+//	setInterruptHandler(0x80, system_call_handler, 3);
+	setInterruptHandler(0x80, syscall_handler_sysenter, 3);
+	
+	
 
 	set_idt_reg(&idtR);
 }

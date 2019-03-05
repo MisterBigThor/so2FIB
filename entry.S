@@ -76,16 +76,54 @@ ENTRY(keyboard_handler)
 	iret
 
 ENTRY(system_call_handler)
+	SAVE_ALL;
+	cmpl $0, %eax;
+	jl error;
+	cmpl $MAX_SYSCALL, %eax;
+	jg error;
+	call *sys_call_table(,%eax,4);
+	jmp fin;
+error:
+	movl $-38, %eax;
+fin:	movl %eax, 18(%esp);
+	RESTORE_ALL;
+	iret;
+
+ENTRY(syscall_handler_sysenter)
+	push $__USER_DS
+	push %EBP   
+	pushfl
+	push $__USER_CS
+	push 4(%EBP)
+
 	SAVE_ALL
 	cmpl $0, %EAX
-	jl err
+	jl sysenter_err
 	cmpl $MAX_SYSCALL, %EAX
-	jg err
+	jg sysenter_err
 	call *sys_call_table(, %eax, 0x04)
-	jmp fin
-err:
+	jmp sysenter_fin
+sysenter_err:
 	movl $-ENOSYS, %EAX
-fin:
+sysenter_fin:
 	movl %EAX, 0x18(%esp)
 	RESTORE_ALL
-	iret;
+	movl (%esp), %edx
+	movl 12(%esp), %ecx
+	sti
+	sysexit
+
+ENTRY(writeMsr)
+	push %ebp
+	movl %esp, %ebp
+	movl 8(%ebp), %ecx
+	movl 12(%ebp), %eax
+	movl $0, %edx
+	wrmsr
+	pop %ebp
+	ret
+
+
+
+
+
