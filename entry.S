@@ -55,17 +55,17 @@ outb %al, $0x20;
       movl %edx, %es
 
 #define RESTORE_ALL \
-	popl %ebx; \
-	popl %ecx; \
-	popl %edx; \
-	popl %esi; \
-	popl %edi; \
-	popl %ebp; \
-	popl %eax; \
-	popl %ds; \
-	popl %es; \
-	popl %fs; \
-	popl %gs;
+    	popl %ebx; \
+    	popl %ecx; \
+    	popl %edx; \
+    	popl %esi; \
+    	popl %edi; \
+    	popl %ebp; \
+    	popl %eax; \
+    	popl %ds; \
+    	popl %es; \
+    	popl %fs; \
+    	popl %gs;
 
 
 ENTRY(keyboard_handler)
@@ -74,24 +74,25 @@ ENTRY(keyboard_handler)
 	EOI
 	RESTORE_ALL
 	iret
-
+//"v1"
 ENTRY(system_call_handler)
 	SAVE_ALL;
 	cmpl $0, %eax;
-	jl error;
+	jl err;
 	cmpl $MAX_SYSCALL, %eax;
-	jg error;
+	jg err;
 	call *sys_call_table(,%eax,4);
 	jmp fin;
-error:
-	movl $-38, %eax;
-fin:	movl %eax, 18(%esp);
+err:
+  movl $-ENOSYS, %eax;
+fin:
+  movl %eax, 18(%esp);
 	RESTORE_ALL;
 	iret;
 
 ENTRY(syscall_handler_sysenter)
 	push $__USER_DS
-	push %EBP   
+	push %EBP
 	pushfl
 	push $__USER_CS
 	push 4(%EBP)
@@ -122,8 +123,3 @@ ENTRY(writeMsr)
 	wrmsr
 	pop %ebp
 	ret
-
-
-
-
-
