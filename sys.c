@@ -48,17 +48,23 @@ int sys_write(int fd, char * buffer, int size){
 	if(check_fd(fd, ESCRIPTURA) != 0) return check_fd(fd, ESCRIPTURA);
 	if(buffer == NULL) return -EFAULT;
 	if(size < 0) return -EINVAL;
+  if(size == 0) return 0;
   char aux[SECCION];
   int i = 0;
   int escrito = 0;
+  int errcopia;
   while(i<(size-SECCION)){
-    copy_from_user(buffer+i, aux, SECCION);
+    errcopia = copy_from_user(buffer+i, aux, SECCION);
+    if(errcopia != 0) return -1;
     escrito += sys_write_console(aux, SECCION);
     i += SECCION;
   }
-  int restant = size - i;
-  copy_from_user(buffer+i, aux, restant);
-  escrito += sys_write_console(aux, restant);
+  int restante = size%SECCION;
+  if(restante != 0){
+    errcopia = copy_from_user(buffer+i, aux, restante);
+    if(errcopia != 0) return -1;
+    escrito += sys_write_console(aux, restante);
+  }
   return escrito;
 }
 

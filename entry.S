@@ -90,14 +90,13 @@ fin:
   movl %eax, 0x18(%esp);
 	RESTORE_ALL;
 	iret;
-
+//V2 soporta sysenter
 ENTRY(syscall_handler_sysenter)
 	push $__USER_DS
 	push %EBP
 	pushfl
 	push $__USER_CS
 	push 4(%EBP)
-
 	SAVE_ALL
 	cmpl $0, %EAX
 	jl sysenter_err

@@ -5,25 +5,37 @@
 ENTRY(writesys)
 	push %ebp;
 	movl %esp, %ebp;
+
+	push %ecx; //salvar ebx i ecx, sysexit els utilitza
 	push %ebx;
-	push %edi;
+	push %edx;
 
 	movl 8(%ebp), %ebx 	//pasar a registres els parametres
 	movl 12(%ebp), %ecx
 	movl 16(%ebp), %edx
 
-	movl $0x04, %eax;
-	int $0x80;
+	leal returnSysEnter, %eax;
+	pushl %eax; 	//guardem @ retorn (seguent a la sysenter)
 
- 	cmpl $0, %eax;
+	push %EBP;
+	movl %esp, %ebp; //fake dynamic link
+
+	movl $0x04, %eax; //# syscall y sysenter
+	sysenter;
+
+returnSysEnter:
+	pop %EBP
+	pop %edx //@ ret o bien sub sumar 4 a %esp
+	pop %edx;
+	pop %ebx
+	pop %ecx;
+	cmpl $0, %eax; //comprobacio resultat, per %eax
 	jge fi
 err:
 	negl %eax
 	movl %eax, errno;
 	movl -1, %eax //retornara -1
 fi:
-	pop %ebx
-	pop %ebp;
 	ret;
 
 ENTRY(SysBad)

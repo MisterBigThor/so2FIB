@@ -19,7 +19,7 @@ void perror(void){
     case EACCES:
       write(1, "No acceso", 64);
       break;
-    case BADSIZE:
+    case EFAULT:
       write(1, "mal tamaño", 10);
       break;
     default:
