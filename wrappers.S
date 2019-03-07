@@ -2,20 +2,30 @@
 
 
 
-ENTRY(writesys)
+
+//%ebp 	<---%ebp
+//@ret syscall
+//%edi
+//%esi
+//%ebx
+//%EBP
+//@ret	+4
+//			+8
+//			+12
+//			+16
+ENTRY(writefast)
 	push %ebp;
 	movl %esp, %ebp;
 
-	push %ecx; //salvar ebx i ecx, sysexit els utilitza
-	push %ebx;
-	push %edx;
+	push %ebx; //salvar ebx i ecx, sysexit els utilitza
+	push %esi;
+	push %edi;
 
 	movl 8(%ebp), %ebx 	//pasar a registres els parametres
 	movl 12(%ebp), %ecx
 	movl 16(%ebp), %edx
 
-	leal returnSysEnter, %eax;
-	pushl %eax; 	//guardem @ retorn (seguent a la sysenter)
+	pushl returnSysEnter; 	//guardem @ retorn (seguent a la sysenter)
 
 	push %EBP;
 	movl %esp, %ebp; //fake dynamic link
@@ -26,9 +36,9 @@ ENTRY(writesys)
 returnSysEnter:
 	pop %EBP
 	pop %edx //@ ret o bien sub sumar 4 a %esp
-	pop %edx;
-	pop %ebx
-	pop %ecx;
+	pop %edi;
+	pop %esi;
+	pop %ebx;
 	cmpl $0, %eax; //comprobacio resultat, per %eax
 	jge fi
 err:
@@ -36,35 +46,6 @@ err:
 	movl %eax, errno;
 	movl -1, %eax //retornara -1
 fi:
-	ret;
-
-ENTRY(SysBad)
-	push %ebp;
-	movl %esp, %ebp;
-
-	push %ebx;
-	push %ecx;
-	push %edx;
-	push %edi;
-	push %esi;
-	push %eax;
-	movl $0x0c, %eax;
-	int $0x80;
-
-	cmpl $0, %eax;
-	jge fibad;
-errbad:
-	negl %eax;
-	movl %eax, errno;
-	movl $-1, (%esp) //retornara pq es error -1
-fibad:
-	pop %eax;
-	pop %esi; // RESTORE_ALL
-	pop %edi;
-	pop %edx;
-	pop %ecx;
-	pop %ebx;
-	pop %ebp;
 	ret;
 
 

@@ -43,29 +43,25 @@ int sys_fork()
 
   return PID;
 }
-#define SECCION 64
+
 int sys_write(int fd, char * buffer, int size){
 	if(check_fd(fd, ESCRIPTURA) != 0) return check_fd(fd, ESCRIPTURA);
 	if(buffer == NULL) return -EFAULT;
 	if(size < 0) return -EINVAL;
   if(size == 0) return 0;
-  char aux[SECCION];
-  int i = 0;
-  int escrito = 0;
-  int errcopia;
-  while(i<(size-SECCION)){
-    errcopia = copy_from_user(buffer+i, aux, SECCION);
-    if(errcopia != 0) return -1;
-    escrito += sys_write_console(aux, SECCION);
-    i += SECCION;
+
+  int ret = 0;
+  char buff[4];
+
+  while(size >= 4){
+    copy_from_user(buffer, buff, 4);
+    ret += sys_write_console(buff,4);
+		buffer += 4;
+		size -= 4;
   }
-  int restante = size%SECCION;
-  if(restante != 0){
-    errcopia = copy_from_user(buffer+i, aux, restante);
-    if(errcopia != 0) return -1;
-    escrito += sys_write_console(aux, restante);
-  }
-  return escrito;
+  copy_from_user(buffer, buff, size);
+	ret += sys_write_console(buff,size);
+  return ret;
 }
 
 void sys_exit()
