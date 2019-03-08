@@ -67,6 +67,12 @@ outb %al, $0x20;
     	popl %fs; \
     	popl %gs;
 
+ENTRY (clock_handler)
+	SAVE_ALL
+	call clock_rutine
+	EOI
+	RESTORE_ALL
+	iret
 
 ENTRY(keyboard_handler)
 	SAVE_ALL
@@ -75,7 +81,7 @@ ENTRY(keyboard_handler)
 	RESTORE_ALL
 	iret
 
-//"v1"
+//v1
 ENTRY(system_call_handler)
 	SAVE_ALL;
 	cmpl $0, %eax;
@@ -92,27 +98,27 @@ fin:
 	iret;
 //V2 sysenter
 ENTRY(syscall_handler_sysenter)
-	push $__USER_DS;
-	push %EBP;
-	pushfl;
-	push $__USER_CS;
-	push 4(%EBP)
-	SAVE_ALL
-	cmpl $0, %EAX
-	jl sysenter_err
-	cmpl $MAX_SYSCALL, %EAX
-	jg sysenter_err
-	call *sys_call_table(, %eax, 0x04)
-	jmp sysenter_fin
-sysenter_err:
-	movl $-ENOSYS, %EAX
-sysenter_fin:
-	movl %EAX, 0x18(%esp)
-	RESTORE_ALL
-	movl (%esp), %edx
-	movl 12(%esp), %ecx
-	sti
-	sysexit
+		push $__USER_DS;
+		push %EBP;
+		pushfl;
+		push $__USER_CS;
+		push 4(%EBP)
+		SAVE_ALL
+		cmpl $0, %EAX
+		jl sysenter_err
+		cmpl $MAX_SYSCALL, %EAX
+		jg sysenter_err
+		call *sys_call_table(, %eax, 0x04)
+		jmp sysenter_fin
+	sysenter_err:	
+		movl $-ENOSYS, %EAX
+	sysenter_fin:
+		movl %EAX, 0x18(%esp)
+		RESTORE_ALL
+		movl (%esp), %edx
+		movl 12(%esp), %ecx
+		sti
+		sysexit
 
 ENTRY(writeMsr)
 	push %ebp

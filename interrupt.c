@@ -11,6 +11,7 @@
 
 Gate idt[IDT_ENTRIES];
 Register    idtR;
+//extern int zeos_ticks;
 
 char char_map[] =
 {
@@ -28,8 +29,8 @@ char char_map[] =
   '\0','\0','\0','\0','\0','\0','\0','\0',
   '\0','\0'
 };
-
-//RSI keyboard
+//===========RUTINAS DE SERVICIO===========
+//service rutine keyboard
 void keyboard_rutine(){
 	unsigned char entrada = inb(0x60);
 	unsigned char MakeOrBreak = entrada >> 7;
@@ -45,8 +46,16 @@ void keyboard_rutine(){
 	}
 	return;
 
-
 }
+//Service rutine clock
+void clock_rutine(){
+  //zeos_ticks += 1;
+  zeos_show_clock();
+  return;  
+}
+
+
+
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
 {
   /***********************************************************************/
@@ -106,7 +115,7 @@ void setIdt()
 	/*INICIALIZAR TALBA IDT*/
 	setInterruptHandler(33, keyboard_handler, 0);
 	setInterruptHandler(0x80, system_call_handler, 3);
-
+  setInterruptHandler(32, clock_handler ,3);
 	set_idt_reg(&idtR);
 }
 

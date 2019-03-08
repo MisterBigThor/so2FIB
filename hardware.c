@@ -81,8 +81,8 @@ void return_gate(Word ds, Word ss, DWord esp, Word cs, DWord eip)
  *    7 6 5 4 3 2 1 0
  *    x x x x x x x x
  *    
- *    bit 0 : Timer => 0000 0000
- *    bit 1 : Keyboard => 0000 0001
+ *    bit 0 : Timer => 0000 0001
+ *    bit 1 : Keyboard => 0000 0010
  *    bit 2 : PIC cascading
  *    bit 3 : 2nd Serial Port
  *    bit 4 : 1st Serial Port
@@ -103,7 +103,7 @@ __asm__ __volatile__(
   "call delay\n\t"
   "sti"
   : /*no output*/
-  : "i" (0xF1)       /* 0xFF = 11111111 -> all bits disabled */
+  : "i" (0xFC)       /* 0xF3 = 1111 1100 -> all bits disabled */
   : "%al" );
 }
 

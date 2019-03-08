@@ -9,10 +9,15 @@
 
 #define IDT_ENTRIES 256
 
+
+//my handlers
 void keyboard_handler();
+void clock_handler();
+void writeMsr();
+
 void system_call_handler();
 void syscall_handler_sysenter();
-void writeMsr();
+
 
 extern Gate idt[IDT_ENTRIES];
 extern Register idtR;
