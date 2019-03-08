@@ -9,7 +9,8 @@ main(void)
 {
     /* Next line, tries to move value 0 to CR3 register. This register is a privileged one, and so it will raise an exception */
      /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
-		 runjp();
-		 //runjp_rank(7,8);
+	 runjp();
+	//runjp_rank(7,8);
+	//writefast(1, "abcd", 4);
 	while(1) { }
 }

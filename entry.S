@@ -90,7 +90,7 @@ fin:
   movl %eax, 0x18(%esp);
 	RESTORE_ALL;
 	iret;
-//V2 soporta sysenter
+//V2 sysenter
 ENTRY(syscall_handler_sysenter)
 	push $__USER_DS
 	push %EBP
@@ -117,9 +117,16 @@ sysenter_fin:
 ENTRY(writeMsr)
 	push %ebp
 	movl %esp, %ebp
+	pushl	%ebx
+	pushl   %esi
+	pushl   %edi
 	movl 8(%ebp), %ecx
 	movl 12(%ebp), %eax
 	movl $0, %edx
 	wrmsr
+	pop %edi
+	pop %esi
+	pop %ebx
+	movl %ebp, %esp
 	pop %ebp
 	ret

@@ -102,7 +102,7 @@ void setIdt()
 	/* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
 	writeMsr(0x174,__KERNEL_CS);
 	writeMsr(0x175,INITIAL_ESP);
-	writeMsr(0x176, (int)syscall_handler_sysenter);
+	writeMsr(0x176, syscall_handler_sysenter);
 	/*INICIALIZAR TALBA IDT*/
 	setInterruptHandler(33, keyboard_handler, 0);
 	setInterruptHandler(0x80, system_call_handler, 3);

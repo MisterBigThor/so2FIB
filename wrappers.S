@@ -24,28 +24,32 @@ ENTRY(writefast)
 	movl 8(%ebp), %ebx 	//pasar a registres els parametres
 	movl 12(%ebp), %ecx
 	movl 16(%ebp), %edx
-
+	movl $0x04, %eax; //# syscall y sysenter
+	push %ecx;
+	push %edx;
 	pushl returnSysEnter; 	//guardem @ retorn (seguent a la sysenter)
 
-	push %EBP;
+	push %ebp;
 	movl %esp, %ebp; //fake dynamic link
-
-	movl $0x04, %eax; //# syscall y sysenter
 	sysenter;
 
 returnSysEnter:
-	pop %EBP
-	pop %edx //@ ret o bien sub sumar 4 a %esp
-	pop %edi;
-	pop %esi;
-	pop %ebx;
+	pop %ebp;
+	pop %edx; //@ ret
+	pop %edx;
+	pop %ecx;
 	cmpl $0, %eax; //comprobacio resultat, per %eax
 	jge fi
 err:
-	negl %eax
+	negl %eax;
 	movl %eax, errno;
 	movl -1, %eax //retornara -1
 fi:
+	pop %edi;
+	pop %esi;
+	pop %ebx;
+	movl %ebp, %esp;
+	pop %ebp;
 	ret;
 
 
