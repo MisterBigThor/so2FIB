@@ -1,8 +1,39 @@
 #include <asm.h>
 
 
-//pila general antes de una syscall:
-//STACK ABANS SYSCALL:
+
+//pila  antes de una syscall gettime:
+
+//%ebp		<-- %ebp
+//@retSys
+//%edx
+//%ecx
+//%ebx
+//%ebp
+//@ret
+ENTRY(gettime)
+	push %ebp; //e. dinàmic
+	movl %esp, %ebp;
+
+	push %ebx;
+
+	movl $10,%eax; 	
+	push %ecx;
+	push %edx;
+	push $returntime
+	push %ebp;
+	movl %esp, %ebp; //fake dynamic link
+	sysenter;
+returntime:
+	pop %ebp;
+	pop %edx; //returntime
+	pop %edx;
+	pop %ecx;
+	pop %ebx;
+	pop %ebp;
+	ret
+
+//pila antes de una syscall write:
 //%ebp 		<---%esp, %ebp
 //@ret-syscall
 //%edi
@@ -13,29 +44,6 @@
 //p1		+8
 //p2		+12
 //p3		+16
-
-ENTRY(gettime)
-	push %ebp; //e. dinàmic
-	movl %esp, %ebp;
-
-	push %ebx; //salvar ebx i ecx, sysexit els utilitza
-	push %esi;
-	push %edi;
-
-	movl $10,%eax; 	
-	push %ecx;
-	push %edx;
-	push $returntime
-	push %ebp;
-	movl %esp, %ebp; //fake dynamic link
-	sysenter;
-returntime:
-	pop %edi;
-	pop	%esi;	
-	pop %ebx;
-	pop %ebp;
-	ret
-
 ENTRY(writefast)
 	push %ebp;
 	movl %esp, %ebp;

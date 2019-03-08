@@ -11,7 +11,7 @@
 
 Gate idt[IDT_ENTRIES];
 Register    idtR;
-//extern int zeos_ticks;
+extern int zeos_ticks;
 
 char char_map[] =
 {
@@ -49,7 +49,7 @@ void keyboard_rutine(){
 }
 //Service rutine clock
 void clock_rutine(){
-  //zeos_ticks += 1;
+  zeos_ticks += 1;
   zeos_show_clock();
   return;  
 }
