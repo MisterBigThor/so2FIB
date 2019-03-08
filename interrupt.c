@@ -110,4 +110,3 @@ void setIdt()
 	set_idt_reg(&idtR);
 }
 
-int write (int fd, char * buffer, int size);

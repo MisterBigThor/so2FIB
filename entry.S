@@ -92,10 +92,10 @@ fin:
 	iret;
 //V2 sysenter
 ENTRY(syscall_handler_sysenter)
-	push $__USER_DS
-	push %EBP
-	pushfl
-	push $__USER_CS
+	push $__USER_DS;
+	push %EBP;
+	pushfl;
+	push $__USER_CS;
 	push 4(%EBP)
 	SAVE_ALL
 	cmpl $0, %EAX

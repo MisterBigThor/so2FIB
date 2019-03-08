@@ -2,17 +2,18 @@
 
 
 
-
-//%ebp 	<---%ebp
-//@ret syscall
+//STACK ABANS SYSCALL:
+//%ebp 		<---%esp, %ebp
+//@ret-syscall
 //%edi
 //%esi
 //%ebx
-//%EBP
-//@ret	+4
-//			+8
-//			+12
-//			+16
+//%ebp
+//@ret		+4
+//p1		+8
+//p2		+12
+//p3		+16
+
 ENTRY(writefast)
 	push %ebp;
 	movl %esp, %ebp;
@@ -24,10 +25,10 @@ ENTRY(writefast)
 	movl 8(%ebp), %ebx 	//pasar a registres els parametres
 	movl 12(%ebp), %ecx
 	movl 16(%ebp), %edx
-	movl $0x04, %eax; //# syscall y sysenter
+	movl $0x04, %eax; //num syscall y sysenter
 	push %ecx;
 	push %edx;
-	pushl returnSysEnter; 	//guardem @ retorn (seguent a la sysenter)
+	pushl $returnSysEnter; 	//guardem @ retorn (seguent a la sysenter)
 
 	push %ebp;
 	movl %esp, %ebp; //fake dynamic link
@@ -60,11 +61,6 @@ ENTRY(write)
 	movl %esp, %ebp;
 	//salvar registres:
  	push %ebx;
-	push %ecx;
-	push %edx;
-	push %edi;
-	push %esi;
-	push %eax;
 	//pasar a registres els parametres
 	movl 8(%ebp), %ebx
 	movl 12(%ebp), %ecx
@@ -79,13 +75,8 @@ returntrap:
 errtrap:
 	negl %eax;
 	movl %eax, errno;
-	movl $-1, (%esp) //retornara pq es error -1
+	movl $-1, %eax //retornara pq es error -1
 fitrap:
-	pop %eax;
-	pop %esi; // RESTORE_ALL
-	pop %edi;
-	pop %edx;
-	pop %ecx;
 	pop %ebx;
 	pop %ebp;
 	ret;
