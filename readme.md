@@ -1,10 +1,14 @@
 
-# HISTORIAL DE CAMBIOS 
+# MEMORIA DEL ZeOS
 
 
+2. INTRODUCCION
 
 3. ENTER THE SYSTEM
 
+### PILA DE SISTEMA
+
+### CAMBIOS EN LOS ARCHIVOS
 * [wrappers.S](wrappers.S) -> codigo en asm que nos proporciona un punto de entrada donde podemos guardar el contexto y hacer la operacion int 0x80 o sysenter.
 * [sys.c](sys.c) -> sys_write, mecanismo de sistema al que llegaran desde la [sys_call_table.S](sys_call_table.S) y que implementa la operacion en si.
 * [errno.h](include/errno.h) aqui definimos los codigos de error del sistema, que utilizamos en sys.c.
