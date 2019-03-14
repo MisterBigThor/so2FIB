@@ -11,19 +11,19 @@ int errno;
 void perror(void){
   switch (errno) {
     case ENOSYS:
-      write(1, "No existe syscall", 64);
+      write(1, "No existe syscall", 17);
       break;
     case EBADF:
-      write(1, "Mal descriptor", 64);
+      write(1, "Mal descriptor", 14);
       break;
     case EACCES:
-      write(1, "No acceso", 64);
+      write(1, "No acceso", 9);
       break;
     case EFAULT:
-      write(1, "mal tamaño", 10);
+      write(1, "Mal tamaño", 10);
       break;
     default:
-      write(1, "no error", 10);
+      write(1, "No error", 8);
       break;
   }
 

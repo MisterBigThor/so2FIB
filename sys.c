@@ -45,10 +45,11 @@ int sys_fork()
   return PID;
 }
 
+#define tamLectura 4
 int sys_write(int fd, char * buffer, int size){
-	if(check_fd(fd, ESCRIPTURA) != 0) return check_fd(fd, ESCRIPTURA);
-	if(buffer == NULL) return -EFAULT;
-	if(size < 0) return -EINVAL;
+  if(check_fd(fd, ESCRIPTURA) != 0) return check_fd(fd, ESCRIPTURA);
+  if(buffer == NULL) return -EFAULT;
+  if(size < 0) return -EINVAL;
   if(size == 0) return 0;
 
   int ret = 0;
