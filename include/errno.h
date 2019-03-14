@@ -7,7 +7,7 @@
 #define EACCES      13
 #define EFAULT      14
 #define EINVAL      22
-#define	ENOSYS		  38	/* Invalid system call number */
+#define	ENOSYS		38	/* Invalid system call number */
 
 
 #endif

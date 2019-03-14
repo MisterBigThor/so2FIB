@@ -28,7 +28,7 @@ int check_fd(int fd, int permissions)
 
 int sys_ni_syscall()
 {
-	return -38; /*ENOSYS*/
+	return -ENOSYS; /*ENOSYS*/
 }
 
 int sys_getpid()
