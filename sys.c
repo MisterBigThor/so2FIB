@@ -21,9 +21,9 @@ extern int zeos_ticks;
 
 int check_fd(int fd, int permissions)
 {
-  if (fd!=1) return -EBADF; /*EBADF*/
-  if (permissions!=ESCRIPTURA) return -EACCES; /*EACCES*/
-  return 0;
+	if (fd!=1) return -EBADF; /*EBADF*/
+	if (permissions!=ESCRIPTURA) return -EACCES; /*EACCES*/
+	return 0;
 }
 
 int sys_ni_syscall()
@@ -38,36 +38,36 @@ int sys_getpid()
 
 int sys_fork()
 {
-  int PID=-1;
+	int PID=-1;
 
-  // creates the child process
+	// creates the child process
 
-  return PID;
+	return PID;
 }
 
-#define tamLectura 4
+#define TAMWRITE 4
 int sys_write(int fd, char * buffer, int size){
-  if(check_fd(fd, ESCRIPTURA) != 0) return check_fd(fd, ESCRIPTURA);
-  if(buffer == NULL) return -EFAULT;
-  if(size < 0) return -EINVAL;
-  if(size == 0) return 0;
+	if(check_fd(fd, ESCRIPTURA) != 0) return check_fd(fd, ESCRIPTURA);
+	if(buffer == NULL) return -EFAULT;
+	if(size < 0) return -EINVAL;
+	if(size == 0) return 0;
 
-  int ret = 0;
-  char buff[4];
+	int ret = 0;
+	char buff[TAMWRITE];
 
-  while(size >= 4){
-    copy_from_user(buffer, buff, 4);
-    ret += sys_write_console(buff,4);
-		buffer += 4;
-		size -= 4;
-  }
-  copy_from_user(buffer, buff, size);
+	while(size >= TAMWRITE){
+		copy_from_user(buffer, buff, TAMWRITE);
+		ret += sys_write_console(buff,TAMWRITE);
+		buffer += TAMWRITE;
+		size -= TAMWRITE;
+	}
+	copy_from_user(buffer, buff, size);
 	ret += sys_write_console(buff,size);
-  return ret;
+	return ret;
 }
 int sys_gettime(){
 
-  return zeos_ticks;
+	return zeos_ticks;
 
 }
 void sys_exit()
