@@ -71,12 +71,12 @@ void init_idle (void)
 {
 	struct list_head * aux = list_first(& freequeue);
 	struct task_struct * ts = list_head_to_task_struct(& aux);
-	ts.PID = 0; //asign PID 0
+	ts->PID = 0; //asign PID 0
 	allocate_DIR(ts); //asign DIR
 	struct task_union tu = (union task_union *) ts;
-	tu.task.kernel_esp = & tu.stack[KERNEL_STACK_SIZE - 2];
-	tu.stack[KERNEL_STACK_SIZE - 2] = 0;
-	tu.stack[KERNEL_STACK_SIZE - 1] = & cpu_idle;
+	tu->task.kernel_esp = & tu->stack[KERNEL_STACK_SIZE - 2];
+	tu->stack[KERNEL_STACK_SIZE - 2] = 0;
+	tu->stack[KERNEL_STACK_SIZE - 1] = & cpu_idle;
 
 	idle_task = ts; 
 }
