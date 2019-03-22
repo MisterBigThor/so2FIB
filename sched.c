@@ -9,7 +9,7 @@
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
 
-struct * idle_task; //global variable for easy access.
+struct task_struct * idle_task; //global variable for easy access.
 
 struct list_head freequeue;
 struct list_head readyqueue;
@@ -70,10 +70,10 @@ TASK_UNION:
 void init_idle (void)
 {
 	struct list_head * aux = list_first(& freequeue);
-	struct task_struct * ts = list_head_to_task_struct(& aux);
+	struct task_struct * ts = list_head_to_task_struct(aux);
 	ts->PID = 0; //asign PID 0
 	allocate_DIR(ts); //asign DIR
-	struct task_union tu = (union task_union *) ts;
+	union task_union * tu = (union task_union *) ts;
 	tu->task.kernel_esp = & tu->stack[KERNEL_STACK_SIZE - 2];
 	tu->stack[KERNEL_STACK_SIZE - 2] = 0;
 	tu->stack[KERNEL_STACK_SIZE - 1] = & cpu_idle;
