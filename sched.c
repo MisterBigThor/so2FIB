@@ -59,22 +59,23 @@ void cpu_idle(void)
 	}
 }
 /*
-TASK_STRUCT: 	int PID;		
+struct TASK_STRUCT: 	int PID;		
   				page_table_entry * dir_pages_baseAddr;
-  				char * kernel_esp;
+  				char * kernel_ebp;
   				struct list_head list;
-TASK_UNION:
+union TASK_UNION:
   				struct task_struct task;
   				unsigned long stack[1023]; 
 */
 void init_idle (void)
 {
 	struct list_head * aux = list_first(& freequeue);
+	list_del(aux);
 	struct task_struct * ts = list_head_to_task_struct(aux);
 	ts->PID = 0; //asign PID 0
 	allocate_DIR(ts); //asign DIR
 	union task_union * tu = (union task_union *) ts;
-	tu->task.kernel_esp = & tu->stack[KERNEL_STACK_SIZE - 2];
+	tu->task.kernel_ebp = & (tu->stack[KERNEL_STACK_SIZE - 2]);
 	tu->stack[KERNEL_STACK_SIZE - 2] = 0;
 	tu->stack[KERNEL_STACK_SIZE - 1] = & cpu_idle;
 
@@ -83,6 +84,20 @@ void init_idle (void)
 
 void init_task1(void)
 {
+	struct list_head * aux = list_first(& freequeue);
+	list_del(aux);
+	struct task_struct * ts = list_head_to_task_struct(aux);
+	union task_union * tu = (union task_union *) ts;
+	ts->PID = 1;
+	allocate_DIR(ts);
+	set_user_pages(ts);
+	
+	ts -> kernel_ebp =  (unsigned long *) KERNEL_ESP(tu);
+
+	tss.esp0 = (unsigned long) KERNEL_ESP(tu); //kernel stack
+	writeMsr(0x175, KERNEL_ESP(tu));
+
+	set_cr3(ts->dir_pages_baseAddr);
 }
 
 

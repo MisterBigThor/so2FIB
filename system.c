@@ -15,7 +15,7 @@
 
 //variables globals sistema:
 
-extern int zeos_ticks = 0;
+int zeos_ticks = 0;
 
 int (*usr_main)(void) = (void *) PH_USER_START;
 unsigned int *p_sys_size = (unsigned int *) KERNEL_START;
