@@ -52,7 +52,7 @@ int allocate_DIR(struct task_struct *t)
 void cpu_idle(void)
 {
 	__asm__ __volatile__("sti": : :"memory");
-
+	printk("Entering cpu idle mode...\n");
 	while(1)
 	{
 	;

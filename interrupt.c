@@ -12,7 +12,7 @@
 Gate idt[IDT_ENTRIES];
 Register    idtR;
 extern int zeos_ticks;
-
+extern struct task_struct * idle_task;
 char char_map[] =
 {
   '\0','\0','1','2','3','4','5','6',
@@ -44,6 +44,7 @@ void keyboard_rutine(){
 		if(c == '\0') printc_xy(0x00, 0x00, 'C');
 		else printc_xy(0x00, 0x00, c);
 	}
+  task_switch(idle_task);
 	return;
 
 }
