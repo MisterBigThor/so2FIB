@@ -136,3 +136,36 @@ ENTRY(writeMsr)
 	movl %ebp, %esp
 	pop %ebp
 	ret
+
+/*
+	*new
+	%EBP 	<-- %ebp
+	@ret 		+4%ebp
+	*new		+8%ebp
+
+*/
+ENTRY(task_switch)
+	push %ebp;
+	movl %esp, %ebp; //dynamic link
+	push %esi;
+	push %edi;
+	push %ebx;
+	push 8(%ebp);
+	call inner_task_switch;
+	addl $4, %esp; 
+	pop %ebx;
+	pop %edi;
+	pop %esi;
+	movl %ebp, %esp; //undo dynamic link
+	pop %ebp;
+	ret;
+
+
+ENTRY(setEsp)
+	movl 4(%esp), %esp
+	popl %ebp;
+	ret;
+
+ENTRY(getEbp)
+	movl %ebp, %eax
+	ret;

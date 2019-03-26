@@ -61,7 +61,7 @@ void cpu_idle(void)
 /*
 struct TASK_STRUCT: 	int PID;		
   				page_table_entry * dir_pages_baseAddr;
-  				char * kernel_ebp;
+  				char * kernel_esp;
   				struct list_head list;
 union TASK_UNION:
   				struct task_struct task;
@@ -75,7 +75,7 @@ void init_idle (void)
 	ts->PID = 0; //asign PID 0
 	allocate_DIR(ts); //asign DIR
 	union task_union * tu = (union task_union *) ts;
-	tu->task.kernel_ebp = & (tu->stack[KERNEL_STACK_SIZE - 2]);
+	tu->task.kernel_esp = & (tu->stack[KERNEL_STACK_SIZE - 2]);
 	tu->stack[KERNEL_STACK_SIZE - 2] = 0;
 	tu->stack[KERNEL_STACK_SIZE - 1] = & cpu_idle;
 
@@ -92,7 +92,7 @@ void init_task1(void)
 	allocate_DIR(ts);
 	set_user_pages(ts);
 	
-	ts -> kernel_ebp =  (unsigned long *) KERNEL_ESP(tu);
+	ts -> kernel_esp =  (unsigned long *) KERNEL_ESP(tu);
 
 	tss.esp0 = (unsigned long) KERNEL_ESP(tu); //kernel stack
 	writeMsr(0x175, KERNEL_ESP(tu));
@@ -100,6 +100,18 @@ void init_task1(void)
 	set_cr3(ts->dir_pages_baseAddr);
 }
 
+
+void inner_task_switch(union task_union*t){
+	tss.esp0 = KERNEL_ESP(t);
+	writeMsr(0x175, (int) KERNEL_ESP(t));
+
+	if(current() -> dir_pages_baseAddr == t->task.dir_pages_baseAddr)
+		set_cr3(t->task.dir_pages_baseAddr);
+	current() -> kernel_esp = (char *) getEbp();
+
+	setEsp(t->task.kernel_esp);
+	return;
+}
 
 void init_sched(){
 	INIT_LIST_HEAD(& freequeue);
