@@ -31,7 +31,7 @@ extern union task_union task[NR_TASKS]; /* Vector de tasques */
 void writeMsr();
 
 
-#define KERNEL_ESP(t)       	(DWord) &(t)->stack[KERNEL_STACK_SIZE]
+#define KERNEL_ESP(t)       (DWord) &(t)->stack[KERNEL_STACK_SIZE]
 
 #define INITIAL_ESP       	KERNEL_ESP(&task[1])
 

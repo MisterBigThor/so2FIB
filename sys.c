@@ -18,6 +18,9 @@
 #define ESCRIPTURA 1
 
 extern int zeos_ticks;
+extern struct list_head freequeue, readqueue;
+
+int incrementalPID = 200;
 
 int check_fd(int fd, int permissions)
 {
@@ -35,6 +38,8 @@ int sys_getpid()
 {
 	return current()->PID;
 }
+
+int ret_from_fork(){return 0;}
 
 int sys_fork()
 {
@@ -56,11 +61,31 @@ int sys_fork()
 		pageNew[i].entry = pageParent[i].entry;
 	//userdata + stack
 	for (int i = 0; i < NUM_PAG_CODE; ++i)
-		pageNew[PAG_LOG_INIT_CODE+page].entry = pageParent[PAG_LOG_INIT_CODE+page].entry;
+		pageNew[PAG_LOG_INIT_CODE+i].entry = pageParent[PAG_LOG_INIT_CODE+i].entry;
 
+	int framesNew[NUM_PAG_DATA];
+	for(int i = 0; i < NUM_PAG_DATA; ++i){
+		if((framesNew[i] = alloc_frame())<0){ //alloc frame error!
+			for(int aux = i-1; aux >= 0; --aux) //revert, si no queda mem
+				free_frame(framesNew[aux]);
+			return -40;
+		}
+		else {
+			set_ss_pag(pageNew, PAG_LOG_INIT_CODE+i, framesNew[i]);
+			set_ss_pag(pageParent, PAG_LOG_INIT_CODE+NUM_PAG_DATA+i, framesNew[i]);
+			//copy_data((int*)((PAG_LOG_INIT_DATA+i)<<12),(int*), PAGE_SIZE);
+			del_ss_pag(pageParent, PAG_LOG_INIT_CODE+NUM_PAG_DATA+i); //free
+		}
+	}
+
+	set_cr3(get_DIR(current()));
+	PID = incrementalPID++;
+	new->PID = PID;
+	int i = (getEbp() - (int)current)/sizeof(int);
+	((union task_union*) new)->stack[i] = ret_from_fork;
+	((union task_union*) new)->stack[i-1] = 0;
 	return PID;
 }
-
 #define TAMWRITE 4
 int sys_write(int fd, char * buffer, int size){
 	if(check_fd(fd, ESCRIPTURA) != 0) return check_fd(fd, ESCRIPTURA);
