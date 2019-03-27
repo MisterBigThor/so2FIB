@@ -109,3 +109,41 @@ fitrap:
 	pop %ebx;
 	pop %ebp;
 	ret;
+
+ENTRY(getpid)
+	push %ebp;
+	movl %esp, %ebp;
+
+	push %ebx; //salvar ebx i ecx, sysexit els utilitza
+	push %esi;
+	push %edi;
+
+	movl $20, %eax; //num syscall y sysenter
+	push %ecx;
+	push %edx;
+	pushl $returnGetPid; 	//guardem @ retorn (seguent a la sysenter)
+
+	push %ebp;
+	movl %esp, %ebp; //fake dynamic link
+	sysenter;
+
+returnGetPid:
+	pop %ebp;
+	pop %edx; //pop @ ret
+	pop %edx;
+	pop %ecx;
+	cmpl $0, %eax; //comprobacio resultat, per %eax
+	jge fiPid
+errPid:
+	negl %eax;
+	movl %eax, errno;
+	movl -1, %eax //retornara -1
+fiPid:
+	pop %edi;
+	pop %esi;
+	pop %ebx;
+	movl %ebp, %esp;
+	pop %ebp;
+ret;
+
+ENTRY(fork)

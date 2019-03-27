@@ -39,8 +39,24 @@ int sys_getpid()
 int sys_fork()
 {
 	int PID=-1;
-
-	// creates the child process
+	//get free task_struct
+	if (list_empty(&freequeue)) return -40;
+	struct list_head *list_aux = list_first(&freequeue);
+	list_del(list_aux);
+	struct task_struct *new = list_head_to_task_struct(list_aux);
+	//inherit system data:
+	copy_data(current(), new, (int) sizeof(union task_union));
+	//initialize dir_pages_baseAddr:
+	if(allocate_DIR(new)<0) return -40;
+	//inherit user data:
+	page_table_entry * pageNew = get_PT(new);
+	page_table_entry * pageParent = get_PT(current());
+	//system code
+	for (int i = 0; i < NUM_PAG_KERNEL; ++i)
+		pageNew[i].entry = pageParent[i].entry;
+	//userdata + stack
+	for (int i = 0; i < NUM_PAG_CODE; ++i)
+		pageNew[PAG_LOG_INIT_CODE+page].entry = pageParent[PAG_LOG_INIT_CODE+page].entry;
 
 	return PID;
 }
