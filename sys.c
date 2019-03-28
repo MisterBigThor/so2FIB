@@ -18,7 +18,7 @@
 #define ESCRIPTURA 1
 
 extern int zeos_ticks;
-extern struct list_head freequeue, readqueue;
+extern struct list_head freequeue, readyqueue;
 
 int incrementalPID = 200;
 
@@ -71,10 +71,10 @@ int sys_fork()
 			return -40;
 		}
 		else {
-			set_ss_pag(pageNew, PAG_LOG_INIT_CODE+i, framesNew[i]);
-			set_ss_pag(pageParent, PAG_LOG_INIT_CODE+NUM_PAG_DATA+i, framesNew[i]);
-			//copy_data((int*)((PAG_LOG_INIT_DATA+i)<<12),(int*), PAGE_SIZE);
-			del_ss_pag(pageParent, PAG_LOG_INIT_CODE+NUM_PAG_DATA+i); //free
+			set_ss_pag(pageNew, PAG_LOG_INIT_DATA+i, framesNew[i]);
+			set_ss_pag(pageParent, PAG_LOG_INIT_DATA+NUM_PAG_DATA+i, framesNew[i]);
+			copy_data((int*)((PAG_LOG_INIT_DATA+i)<<12),(int*)((PAG_LOG_INIT_DATA+NUM_PAG_DATA+i)<<12), PAGE_SIZE);
+			del_ss_pag(pageParent, PAG_LOG_INIT_DATA+NUM_PAG_DATA+i); //free
 		}
 	}
 
@@ -84,6 +84,8 @@ int sys_fork()
 	int i = (getEbp() - (int)current)/sizeof(int);
 	((union task_union*) new)->stack[i] = ret_from_fork;
 	((union task_union*) new)->stack[i-1] = 0;
+	new->kernel_esp = &((union task_union*)new)->stack[i-1];
+	list_add_tail(list_aux, &readyqueue);
 	return PID;
 }
 #define TAMWRITE 4

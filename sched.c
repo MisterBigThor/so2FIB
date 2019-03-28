@@ -121,6 +121,19 @@ void init_sched(){
 	INIT_LIST_HEAD(& readyqueue);
 }
 
+//rr --> restar el quantum
+void update_sched_data_rr(){
+
+}
+int needs_sched_rr(){
+
+}
+void update_process_state_rr(struct task_struct*t, struct list_head *dst_queue){
+
+}
+void sched_next_rr(void){
+
+}
 struct task_struct* current()
 {
   int ret_value;
