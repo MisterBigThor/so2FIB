@@ -92,7 +92,6 @@ main(void)
 
   /* Initialize Scheduling */
   init_sched();
-
   /* Initialize idle task data */
   init_idle();
   /* Initialize task 1 data */

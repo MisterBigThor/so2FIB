@@ -8,6 +8,7 @@
 #include <list.h>
 #include <types.h>
 #include <mm_address.h>
+#include <stats.h>
 
 #define NR_TASKS      10
 #define KERNEL_STACK_SIZE	1024
@@ -19,6 +20,9 @@ struct task_struct {
   page_table_entry * dir_pages_baseAddr;
   char * kernel_esp;
   struct list_head list;
+  enum state_t estado;
+struct stats estadisticas;
+  int quantum;
 };
 
 union task_union {
@@ -54,6 +58,10 @@ int allocate_DIR(struct task_struct *t);
 page_table_entry * get_PT (struct task_struct *t) ;
 
 page_table_entry * get_DIR (struct task_struct *t) ;
+
+int get_quantum(struct task_struct *t);
+
+void set_quantum(struct task_struct *t, int new_quantum);
 
 /* Headers for the scheduling policy */
 void sched_next_rr();
