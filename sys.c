@@ -87,6 +87,7 @@ int sys_fork()
 	PID = incrementalPID++;
 	new->PID = PID;
 	new->estado = ST_READY;
+
 	int i = (getEbp() - (int)(current()))/sizeof(int);
 
 	((union task_union*) new)->stack[i] = & ret_from_fork;

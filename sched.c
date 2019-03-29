@@ -110,6 +110,7 @@ void init_task1(void)
 	tss.esp0 = (unsigned long) KERNEL_ESP(tu); //kernel stack
 	ts->kernel_esp = KERNEL_ESP(tu);
 	writeMsr(0x175, KERNEL_ESP(tu));
+<<<<<<< HEAD
 	ts->quantum = QUANTUMINICIAL;
 	ts->estado = ST_RUN;
 	
@@ -121,6 +122,10 @@ void init_task1(void)
 	ts->estadisticas.total_trans = 0;
 	ts->estadisticas.remaining_ticks = QUANTUMINICIAL;
 
+=======
+	ts->quantum = 15;
+	ts->estado = ST_RUN;
+>>>>>>> 49d6338838638c0f9949fb6e8cec4518179a05c7
 	set_cr3(ts->dir_pages_baseAddr);
 }
 
@@ -148,13 +153,14 @@ void init_sched(){
 	INIT_LIST_HEAD(& readyqueue);
 }
 
+
 //update scheduling && stats information
 void update_sched_data_rr(){
 	current()->quantum--;
 	current()->estadisticas.remaining_ticks--;
 	current()->estadisticas.user_ticks += get_ticks() - current()->estadisticas.elapsed_total_ticks;
 	current()->estadisticas.elapsed_total_ticks = get_ticks();
-}
+
 //necesary change process
 int needs_sched_rr(){
 	return 	(current()->quantum <= 0) &&
@@ -164,10 +170,8 @@ int needs_sched_rr(){
 //update state current
 void update_process_state_rr(struct task_struct*t, struct list_head *dst_queue){
 	if(t->estado != ST_RUN) list_del(&t->list);
-	if(dst_queue == NULL){
-		t->estado = ST_RUN;
+	if(dst_queue == NULL)t->estado = ST_RUN;
 
-	}
 	else{
 		list_add_tail(&t->list, dst_queue);
 		if(dst_queue == &readyqueue) t->estado = ST_READY;
@@ -181,9 +185,8 @@ void sched_next_rr(void){
 		update_process_state_rr(next, NULL);
 		task_switch((union task_union*) next);
 	}
-	else {
-		task_switch((union task_union*) idle_task);
-	}
+
+	else task_switch((union task_union*) idle_task);
 }
 int get_quantum(struct task_struct *t){
 	return t->quantum;

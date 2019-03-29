@@ -190,7 +190,11 @@ ENTRY(exit)
 	movl $1, %eax; //num syscall y sysenter
 	push %ecx;	//salvar ebx i ecx, sysexit els utilitza
 	push %edx;
+<<<<<<< HEAD
 	pushl $returnExit; 	//guardem @ retorn (seguent a la sysenter)
+=======
+	pushl $fiExit; 	//guardem @ retorn (seguent a la sysenter)
+>>>>>>> 49d6338838638c0f9949fb6e8cec4518179a05c7
 
 	push %ebp;
 	movl %esp, %ebp; //fake dynamic link
@@ -210,6 +214,7 @@ fiExit:
 ret;
 
 ENTRY(get_stats)
+<<<<<<< HEAD
 	push %ebp;
 	movl %esp, %ebp;
 	push %ebx; 
@@ -249,3 +254,7 @@ fistats:
 	pop %ebp;
 
 	ret;
+=======
+
+ret;
+>>>>>>> 49d6338838638c0f9949fb6e8cec4518179a05c7
