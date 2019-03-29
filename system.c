@@ -92,7 +92,6 @@ main(void)
 
   /* Initialize Scheduling */
   init_sched();
-
   /* Initialize idle task data */
   init_idle();
   /* Initialize task 1 data */
@@ -103,7 +102,8 @@ main(void)
 
 
   printk("Entering user mode...");
-
+  zeos_init_auxjp();
+  
   enable_int();
   /*
    * We return from a 'theorical' call to a 'call gate' to reduce our privileges

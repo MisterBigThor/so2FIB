@@ -13,6 +13,7 @@
 
 #include <sched.h>
 #include <errno.h>
+#include <stats.h>
 
 #define LECTURA 0
 #define ESCRIPTURA 1
@@ -21,6 +22,8 @@ extern int zeos_ticks;
 extern struct list_head freequeue, readyqueue;
 
 int incrementalPID = 200;
+
+int getEbp();
 
 int check_fd(int fd, int permissions)
 {
@@ -48,6 +51,7 @@ int sys_fork()
 	if (list_empty(&freequeue)) return -40;
 	struct list_head *list_aux = list_first(&freequeue);
 	list_del(list_aux);
+
 	struct task_struct *new = list_head_to_task_struct(list_aux);
 	//inherit system data:
 	copy_data(current(), new, (int) sizeof(union task_union));
@@ -58,7 +62,7 @@ int sys_fork()
 	page_table_entry * pageParent = get_PT(current());
 	//system code
 	for (int i = 0; i < NUM_PAG_KERNEL; ++i)
-		pageNew[i].entry = pageParent[i].entry;
+		pageNew[1+i].entry = pageParent[1+i].entry;
 	//userdata + stack
 	for (int i = 0; i < NUM_PAG_CODE; ++i)
 		pageNew[PAG_LOG_INIT_CODE+i].entry = pageParent[PAG_LOG_INIT_CODE+i].entry;
@@ -79,13 +83,18 @@ int sys_fork()
 	}
 
 	set_cr3(get_DIR(current()));
+
 	PID = incrementalPID++;
 	new->PID = PID;
-	int i = (getEbp() - (int)current)/sizeof(int);
-	((union task_union*) new)->stack[i] = ret_from_fork;
+	new->estado = ST_READY;
+	int i = (getEbp() - (int)(current()))/sizeof(int);
+
+	((union task_union*) new)->stack[i] = & ret_from_fork;
 	((union task_union*) new)->stack[i-1] = 0;
 	new->kernel_esp = &((union task_union*)new)->stack[i-1];
+
 	list_add_tail(list_aux, &readyqueue);
+
 	return PID;
 }
 #define TAMWRITE 4
@@ -115,4 +124,27 @@ int sys_gettime(){
 }
 void sys_exit()
 {
+	struct task_struct *aux = current();
+
+	page_table_entry * pt = get_PT(aux);
+	for(int p = 0; p < NUM_PAG_DATA; ++p){
+		free_frame(pt[PAG_LOG_INIT_DATA+p].bits.pbase_addr);
+		del_ss_pag(pt, PAG_LOG_INIT_DATA+p);
+	}
+
+	update_process_state_rr(aux, &freequeue);
+	sched_next_rr();
+}
+int sys_get_stats(int pid, struct stats *st){
+	if(pid < 0) return -40;
+	if(!access_ok(VERIFY_WRITE, st, sizeof(struct stats))) return -20;
+	struct task_struct *act;
+	int i;
+	//for(act = &(); i<NR_TASKS; act = ){
+		if(act->PID == pid){
+			copy_to_user(&(act->estadisticas),st,sizeof(struct stats));
+			return 0;
+		}
+	//}
+	return -33;
 }

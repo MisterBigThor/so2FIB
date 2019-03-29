@@ -13,6 +13,7 @@ Gate idt[IDT_ENTRIES];
 Register    idtR;
 extern int zeos_ticks;
 extern struct task_struct * idle_task;
+extern struct  list_head readyqueue;
 char char_map[] =
 {
   '\0','\0','1','2','3','4','5','6',
@@ -44,14 +45,20 @@ void keyboard_rutine(){
 		if(c == '\0') printc_xy(0x00, 0x00, 'C');
 		else printc_xy(0x00, 0x00, c);
 	}
-  task_switch(idle_task);
+  //task_switch((union task_union*)idle_task);
 	return;
 
 }
 //Service rutine clock
 void clock_rutine(){
-  zeos_ticks += 1;
   zeos_show_clock();
+  zeos_ticks += 1;
+  update_sched_data_rr();
+  if(needs_sched_rr()){
+    if(current()->PID)
+      enqueue_current(&readyqueue);
+      sched_next_rr();
+    } 
   return;  
 }
 
