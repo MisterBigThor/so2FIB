@@ -20,8 +20,9 @@
 
 extern int zeos_ticks;
 extern struct list_head freequeue, readyqueue;
+extern int qLeft;
 
-int incrementalPID = 200;
+int incrementalPID = 2;
 
 int getEbp();
 
@@ -62,7 +63,7 @@ int sys_fork()
 	page_table_entry * pageParent = get_PT(current());
 	//system code
 	for (int i = 0; i < NUM_PAG_KERNEL; ++i)
-		pageNew[1+i].entry = pageParent[1+i].entry;
+		pageNew[i].entry = pageParent[i].entry;
 	//userdata + stack
 	for (int i = 0; i < NUM_PAG_CODE; ++i)
 		pageNew[PAG_LOG_INIT_CODE+i].entry = pageParent[PAG_LOG_INIT_CODE+i].entry;
@@ -87,6 +88,9 @@ int sys_fork()
 	PID = incrementalPID++;
 	new->PID = PID;
 	new->estado = ST_READY;
+
+	struct stats aux;
+	new->estadisticas = aux;
 
 	int i = (getEbp() - (int)(current()))/sizeof(int);
 
@@ -140,12 +144,13 @@ int sys_get_stats(int pid, struct stats *st){
 	if(pid < 0) return -40;
 	if(!access_ok(VERIFY_WRITE, st, sizeof(struct stats))) return -20;
 	struct task_struct *act;
-	int i;
-	//for(act = &(); i<NR_TASKS; act = ){
+	int i = 0 ;
+	for(act = &(task[i].task); i<NR_TASKS; act = &(task[++i].task)){
 		if(act->PID == pid){
+			act->estadisticas.remaining_ticks = qLeft;
 			copy_to_user(&(act->estadisticas),st,sizeof(struct stats));
 			return 0;
 		}
-	//}
+	}
 	return -33;
 }

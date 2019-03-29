@@ -69,14 +69,18 @@ outb %al, $0x20;
 
 ENTRY (clock_handler)
 	SAVE_ALL
+	call update_stats_sysenter;
 	call clock_rutine
+	call update_stats_exitSys;
 	EOI
 	RESTORE_ALL
 	iret
 
 ENTRY(keyboard_handler)
 	SAVE_ALL
+	call update_stats_sysenter;
 	call keyboard_rutine
+	call update_stats_exitSys;
 	EOI
 	RESTORE_ALL
 	iret
@@ -104,16 +108,23 @@ ENTRY(syscall_handler_sysenter)
 		push $__USER_CS;
 		push 4(%EBP)
 		SAVE_ALL
+		push %eax;
+		call update_stats_sysenter;
+		pop %eax;
 		cmpl $0, %EAX
 		jl sysenter_err
 		cmpl $MAX_SYSCALL, %EAX
 		jg sysenter_err
+
 		call *sys_call_table(, %eax, 0x04)
 		jmp sysenter_fin
 	sysenter_err:	
 		movl $-ENOSYS, %EAX
 	sysenter_fin:
 		movl %EAX, 0x18(%esp)
+		push %eax;
+		call update_stats_exitSys;
+		pop %eax;
 		RESTORE_ALL
 		movl (%esp), %edx
 		movl 12(%esp), %ecx

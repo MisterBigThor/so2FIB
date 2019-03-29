@@ -18,27 +18,26 @@ struct task_struct * idle_task; //global variable for easy access.
 struct list_head freequeue;
 struct list_head readyqueue;
 
-int getEbp();
+unsigned long getEbp();
 void setEsp();
-#if 1
-struct task_struct *list_head_to_task_struct(struct list_head *l)
-{
-  return list_entry( l, struct task_struct, list);
-}
-#endif
+void writeMsr(int msr, int data);
+
+int qLeft;
 
 extern struct list_head blocked;
 
+struct task_struct *list_head_to_task_struct(struct list_head *l){
+  return list_entry( l, struct task_struct, list);
+}
+
 
 /* get_DIR - Returns the Page Directory address for task 't' */
-page_table_entry * get_DIR (struct task_struct *t) 
-{
+page_table_entry * get_DIR (struct task_struct *t) {
 	return t->dir_pages_baseAddr;
 }
 
 /* get_PT - Returns the Page Table address for task 't' */
-page_table_entry * get_PT (struct task_struct *t) 
-{
+page_table_entry * get_PT (struct task_struct *t) {
 	return (page_table_entry *)(((unsigned int)(t->dir_pages_baseAddr->bits.pbase_addr))<<12);
 }
 
@@ -63,6 +62,7 @@ void cpu_idle(void)
 	;
 	}
 }
+
 void enqueue_current(struct list_head *next_queue){
 	struct stats *st;
 	st = &current()->estadisticas;
@@ -84,14 +84,6 @@ void init_idle (void)
 
 	ts->estado = ST_READY;
 
-
-	ts->estadisticas.system_ticks = 0;
-	ts->estadisticas.blocked_ticks = 0;
-	ts->estadisticas.ready_ticks = 0;
-	ts->estadisticas.elapsed_total_ticks = 0;
-	ts->estadisticas.total_trans = 0;
-	ts->estadisticas.remaining_ticks = QUANTUMINICIAL;
-
 	idle_task = ts; 	
 }
 
@@ -110,22 +102,11 @@ void init_task1(void)
 	tss.esp0 = (unsigned long) KERNEL_ESP(tu); //kernel stack
 	ts->kernel_esp = KERNEL_ESP(tu);
 	writeMsr(0x175, KERNEL_ESP(tu));
-<<<<<<< HEAD
+
 	ts->quantum = QUANTUMINICIAL;
+	qLeft = QUANTUMINICIAL;
 	ts->estado = ST_RUN;
 	
-	ts->estadisticas.user_ticks = 0;
-	ts->estadisticas.system_ticks = 0;
-	ts->estadisticas.blocked_ticks = 0;
-	ts->estadisticas.ready_ticks = 0;
-	ts->estadisticas.elapsed_total_ticks = 0;
-	ts->estadisticas.total_trans = 0;
-	ts->estadisticas.remaining_ticks = QUANTUMINICIAL;
-
-=======
-	ts->quantum = 15;
-	ts->estado = ST_RUN;
->>>>>>> 49d6338838638c0f9949fb6e8cec4518179a05c7
 	set_cr3(ts->dir_pages_baseAddr);
 }
 
@@ -156,16 +137,11 @@ void init_sched(){
 
 //update scheduling && stats information
 void update_sched_data_rr(){
-	current()->quantum--;
-	current()->estadisticas.remaining_ticks--;
-	current()->estadisticas.user_ticks += get_ticks() - current()->estadisticas.elapsed_total_ticks;
-	current()->estadisticas.elapsed_total_ticks = get_ticks();
-
+	qLeft--;
+}
 //necesary change process
 int needs_sched_rr(){
-	return 	(current()->quantum <= 0) &&
-			! list_empty(&readyqueue) &&
-			(current()->PID != 0);
+	return 	(qLeft <= 0 || current()->PID != 0) && (! list_empty(&readyqueue));
 }
 //update state current
 void update_process_state_rr(struct task_struct*t, struct list_head *dst_queue){
@@ -182,7 +158,13 @@ void sched_next_rr(void){
 	if(!list_empty(&readyqueue)){
 		struct list_head *aux = list_first(&readyqueue);
 		struct task_struct *next = list_head_to_task_struct(aux);
+
+		qLeft = next->quantum;
+		next->estadisticas.ready_ticks += get_ticks() - next->estadisticas.elapsed_total_ticks;
+		next->estadisticas.elapsed_total_ticks = get_ticks();
+		next->estadisticas.total_trans += 1;		
 		update_process_state_rr(next, NULL);
+		
 		task_switch((union task_union*) next);
 	}
 
@@ -205,3 +187,15 @@ struct task_struct* current()
   return (struct task_struct*)(ret_value&0xfffff000);
 }
 
+void update_stats_sysenter(){
+	struct stats *aux;
+	aux = & current()->estadisticas;
+	aux->user_ticks += get_ticks() - aux->elapsed_total_ticks;
+	aux->elapsed_total_ticks = get_ticks();	
+}
+void update_stats_exitSys(){
+	struct stats *aux;
+	aux = & current()->estadisticas;
+	aux->system_ticks += get_ticks() - aux->elapsed_total_ticks;
+	aux->elapsed_total_ticks = get_ticks();	
+}
