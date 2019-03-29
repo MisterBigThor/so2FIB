@@ -23,7 +23,7 @@ main(void)
 	//runjp_rank(2,32);
 
 	//int i = fork();
-//	if(i == 0) writefast(1, "hijo",strlen("hijo"));
+	//if(i == 0) writefast(1, "hijo",strlen("hijo"));
 	//else writefast(1,"padre",strlen("padre"));
 
 ///	int i = fork();
@@ -32,6 +32,6 @@ main(void)
 
 
 	runjp();
-	//runjp_rank(6,32);
+//	runjp_rank(6,32);
 	while(1) { }
 }

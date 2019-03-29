@@ -56,7 +56,6 @@ int allocate_DIR(struct task_struct *t)
 void cpu_idle(void)
 {
 	__asm__ __volatile__("sti": : :"memory");
-	printk("Entering cpu idle mode...\n");
 	while(1)
 	{
 	;
@@ -93,13 +92,15 @@ void init_task1(void)
 	list_del(aux);
 	struct task_struct * ts = list_head_to_task_struct(aux);
 	union task_union * tu = (union task_union *) ts;
+
 	ts->PID = 1;
 	allocate_DIR(ts);
 	set_user_pages(ts);
 	
 	ts -> kernel_esp =  (unsigned long *) KERNEL_ESP(tu);
 
-	tss.esp0 = (unsigned long) KERNEL_ESP(tu); //kernel stack
+	//tss.esp0 = (unsigned long) KERNEL_ESP(tu); //kernel stack
+	tss.esp0 = &tu->stack[KERNEL_STACK_SIZE];
 	ts->kernel_esp = KERNEL_ESP(tu);
 	writeMsr(0x175, KERNEL_ESP(tu));
 
@@ -120,8 +121,6 @@ void inner_task_switch(union task_union*t){
 
 	setEsp(t->task.kernel_esp);
 
-	t->task.estadisticas.total_trans++;
-
 	return;
 }
 
@@ -141,7 +140,7 @@ void update_sched_data_rr(){
 }
 //necesary change process
 int needs_sched_rr(){
-	return 	(qLeft <= 0 || current()->PID != 0) && (! list_empty(&readyqueue));
+	return 	(qLeft <= 0 && (! list_empty(&readyqueue)));
 }
 //update state current
 void update_process_state_rr(struct task_struct*t, struct list_head *dst_queue){

@@ -63,7 +63,7 @@ int sys_fork()
 	page_table_entry * pageParent = get_PT(current());
 	//system code
 	for (int i = 0; i < NUM_PAG_KERNEL; ++i)
-		pageNew[i].entry = pageParent[i].entry;
+		pageNew[1+i].entry = pageParent[1+i].entry;
 	//userdata + stack
 	for (int i = 0; i < NUM_PAG_CODE; ++i)
 		pageNew[PAG_LOG_INIT_CODE+i].entry = pageParent[PAG_LOG_INIT_CODE+i].entry;
@@ -88,7 +88,6 @@ int sys_fork()
 	PID = incrementalPID++;
 	new->PID = PID;
 	new->estado = ST_READY;
-
 	struct stats aux;
 	new->estadisticas = aux;
 
