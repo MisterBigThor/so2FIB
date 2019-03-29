@@ -56,6 +56,7 @@ int allocate_DIR(struct task_struct *t)
 void cpu_idle(void)
 {
 	__asm__ __volatile__("sti": : :"memory");
+	printk("entrando en idle \n");
 	while(1)
 	{
 	;
@@ -149,7 +150,9 @@ void update_process_state_rr(struct task_struct*t, struct list_head *dst_queue){
 
 	else{
 		list_add_tail(&t->list, dst_queue);
-		if(dst_queue == &readyqueue) t->estado = ST_READY;
+		if(dst_queue == &readyqueue) {
+			t->estado = ST_READY;
+		}
 	}
 }
 //seleciona siguiente proceso a ejecutar:
@@ -164,6 +167,7 @@ void sched_next_rr(void){
 		next->estadisticas.total_trans += 1;		
 		update_process_state_rr(next, NULL);
 		
+		qLeft = next->quantum;
 		task_switch((union task_union*) next);
 	}
 
