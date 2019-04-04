@@ -71,8 +71,8 @@ ENTRY (clock_handler)
 	SAVE_ALL
 	call update_stats_sysenter;
 	call clock_rutine
-	call update_stats_exitSys;
 	EOI
+	call update_stats_exitSys;
 	RESTORE_ALL
 	iret
 
@@ -80,8 +80,8 @@ ENTRY(keyboard_handler)
 	SAVE_ALL
 	call update_stats_sysenter;
 	call keyboard_rutine
-	call update_stats_exitSys;
 	EOI
+	call update_stats_exitSys;
 	RESTORE_ALL
 	iret
 
@@ -134,16 +134,10 @@ ENTRY(syscall_handler_sysenter)
 ENTRY(writeMsr)
 	push %ebp
 	movl %esp, %ebp
-	pushl	%ebx
-	pushl   %esi
-	pushl   %edi
 	movl 8(%ebp), %ecx
 	movl 12(%ebp), %eax
 	movl $0, %edx
 	wrmsr
-	pop %edi
-	pop %esi
-	pop %ebx
 	movl %ebp, %esp
 	pop %ebp
 	ret

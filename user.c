@@ -1,5 +1,5 @@
 #include <libc.h>
-
+#include <stats.h>
 char buff[24];
 
 int pid;
@@ -12,7 +12,7 @@ main(void)
 
 	
 
-	//runjp();
+	runjp();
 
 	//runjp_rank(0,0);
 	//writefast(1, "abcd", 4);
@@ -22,16 +22,24 @@ main(void)
 	//writefast(1,a,strlen(a));	
 	//runjp_rank(2,32);
 
-	//int i = fork();
-	//if(i == 0) writefast(1, "hijo",strlen("hijo"));
-	//else writefast(1,"padre",strlen("padre"));
+	
+	struct stats aux;
+	int i = fork();
+	if(i == 0) {
+		writefast(1, "hijo",strlen("hijo\n"));
+		get_stats(getpid(), & aux);
+		exit();
+	}
 
-///	int i = fork();
-///	if(i == 0) writefast(1, "hijo",strlen("hijo"));
-//	else writefast(1,"padre",strlen("padre"));
+	else {
+		writefast(1,"padre",strlen("padre\n"));
+		get_stats(getpid(), & aux);
+	}
+	
 
 
-	runjp();
-//	runjp_rank(6,32);
+//	runjp();
+	//runjp_rank(6,12);
+	//runjp_rank(14,32);
 	while(1) { }
 }

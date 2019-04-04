@@ -49,8 +49,7 @@ ENTRY(writefast)
 	movl %esp, %ebp;
 
 	push %ebx; //salvar ebx i ecx, sysexit els utilitza
-	push %esi;
-	push %edi;
+
 
 	movl 8(%ebp), %ebx 	//pasar a registres els parametres
 	movl 12(%ebp), %ecx
@@ -74,11 +73,9 @@ returnSysEnter:
 err:
 	negl %eax;
 	movl %eax, errno;
-	movl -1, %eax //retornara -1
+	movl $-1, %eax //retornara -1
 fi:
 	pop %edi;
-	pop %esi;
-	pop %ebx;
 	movl %ebp, %esp;
 	pop %ebp;
 ret;
@@ -137,7 +134,7 @@ returnGetPid:
 errPid:
 	negl %eax;
 	movl %eax, errno;
-	movl -1, %eax //retornara -1
+	movl $-1, %eax //retornara -1
 fiPid:
 	pop %edi;
 	pop %esi;
@@ -162,19 +159,17 @@ ENTRY(fork)
 
 returnfork:
 	pop %ebp;
-	pop %edx;
-	pop %edx;
+	pop %edx;	//@ret
+	pop %edx;	
 	pop %ecx;
+	pop %ebx;	
 	cmpl $0, %eax; //comprobacio resultat, per %eax
 	jge fifork;
 errfork:	
 	negl %eax;
 	movl %eax, errno;
 	movl -1, %eax //retornara -1
-fifork:
-	pop %edi;
-	pop %esi;
-	pop %ebx;
+fifork:	
 	movl %ebp, %esp;
 	pop %ebp;
 	ret;
@@ -219,7 +214,7 @@ ENTRY(get_stats)
 	movl 12(%ebp), %ecx
 
 	movl $35, %eax; //num syscall y sysenter
-	push %ecx;	//salvar ebx i ecx, sysexit els utilitza
+	push %ecx;		//salvar ebx i ecx, sysexit els utilitza
 	push %edx;
 	pushl $returnstats; 	//guardem @ retorn (seguent a la sysenter)
 
@@ -240,10 +235,8 @@ errstats:
 	pop %edx; //pop @ ret
 	pop %edx;
 	pop %ecx;
-fistats:
-	pop %edi;
-	pop %esi;
 	pop %ebx;
+fistats:
 	movl %ebp, %esp;
 	pop %ebp;
 
