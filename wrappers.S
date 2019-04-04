@@ -2,7 +2,7 @@
 
 
 
-//pila  antes de una syscall gettime:
+//pila antes de una syscall gettime:
 
 //%ebp		<-- %ebp
 //@retSys
@@ -10,7 +10,7 @@
 //%ecx
 //%ebx
 //%ebp
-//@ret
+//@retwrapper
 ENTRY(gettime)
 	push %ebp; //e. dinàmic
 	movl %esp, %ebp;
@@ -24,7 +24,7 @@ ENTRY(gettime)
 	push %ebp;
 	movl %esp, %ebp; //fake dynamic link
 	sysenter;
-returntime:
+	returntime:
 	pop %ebp;
 	pop %edx; //returntime
 	pop %edx;
@@ -168,7 +168,7 @@ returnfork:
 errfork:	
 	negl %eax;
 	movl %eax, errno;
-	movl -1, %eax //retornara -1
+	movl $-1, %eax //retornara -1
 fifork:	
 	movl %ebp, %esp;
 	pop %ebp;

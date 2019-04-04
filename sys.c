@@ -40,6 +40,7 @@ int sys_ni_syscall()
 
 int sys_getpid()
 {
+	if(current()->PID < 0) return -40;
 	return current()->PID;
 }
 
