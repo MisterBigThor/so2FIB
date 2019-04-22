@@ -69,19 +69,27 @@ outb %al, $0x20;
 
 ENTRY (clock_handler)
 	SAVE_ALL
+	pushl %eax;
 	call update_stats_sysenter;
-	call clock_rutine
+	popl %eax;
 	EOI
+	call clock_rutine	
+	pushl %eax;
 	call update_stats_exitSys;
+	popl %eax;
 	RESTORE_ALL
 	iret
 
 ENTRY(keyboard_handler)
 	SAVE_ALL
+	pushl %eax;
 	call update_stats_sysenter;
-	call keyboard_rutine
+	popl %eax;
 	EOI
+	call keyboard_rutine
+	pushl %eax;
 	call update_stats_exitSys;
+	popl %eax;
 	RESTORE_ALL
 	iret
 
