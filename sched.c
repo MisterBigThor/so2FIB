@@ -68,7 +68,7 @@ void cpu_idle(void)
 	}
 }
 
-#define DEFAULT_QUANTUM 10
+#define DEFAULT_QUANTUM 5
 int qLeft;
 
 int get_quantum(struct task_struct *t){
@@ -106,7 +106,8 @@ void sched_next_rr(void){
 	if(!list_empty(&readyqueue)){
 		struct list_head* next = list_first(&readyqueue);
 		struct task_struct* nextt = list_head_to_task_struct(next);
-		qLeft = nextt->quantum;
+		qLeft = DEFAULT_QUANTUM;
+		nextt->quantum = qLeft;
 		struct stats *st;
 		st = &nextt->estadisticas;
 		st->ready_ticks += get_ticks() - st->elapsed_total_ticks;
@@ -120,11 +121,17 @@ void sched_next_rr(void){
 void schedule(){
 	update_sched_data_rr();
 	if(needs_sched_rr()){
-		update_process_state_rr(current(), &readyqueue);
+		exitRunCurrent(&readyqueue);
 		sched_next_rr();	
 	}
 }
-
+void exitRunCurrent(struct list_head *nextListCurrent){
+	struct stats *st;
+	st = &current()->estadisticas;
+	st->system_ticks += get_ticks() - st->elapsed_total_ticks;
+	st->elapsed_total_ticks = get_ticks();
+	update_process_state_rr(current(), nextListCurrent);
+}
 void init_idle (void)
 {
 	struct list_head * aux = list_first(& freequeue);
@@ -200,21 +207,16 @@ struct task_struct* current()
   return (struct task_struct*)(ret_value&0xfffff000);
 }
 
-void update_stats_sysenter(){
+void statsEntrySys(){
 	struct stats *aux;
 	aux = & current()->estadisticas;
 	aux->user_ticks += get_ticks() - aux->elapsed_total_ticks;
 	aux->elapsed_total_ticks = get_ticks();	
 }
-void update_stats_exitSys(){
+
+void statsLeaveSys(){
 	struct stats *aux;
 	aux = & current()->estadisticas;
 	aux->system_ticks += get_ticks() - aux->elapsed_total_ticks;
 	aux->elapsed_total_ticks = get_ticks();	
-}
-
-void update_stats(unsigned long *v, unsigned long *elapsed){
-	unsigned long current_ticks = get_ticks();
-	*v += current_ticks - *elapsed;
-	*elapsed = current_ticks;
 }

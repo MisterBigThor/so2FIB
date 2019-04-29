@@ -70,12 +70,12 @@ outb %al, $0x20;
 ENTRY (clock_handler)
 	SAVE_ALL
 	pushl %eax;
-	call update_stats_sysenter;
+	call statsEntrySys;
 	popl %eax;
 	EOI
 	call clock_rutine	
 	pushl %eax;
-	call update_stats_exitSys;
+	call statsLeaveSys;
 	popl %eax;
 	RESTORE_ALL
 	iret
@@ -83,12 +83,12 @@ ENTRY (clock_handler)
 ENTRY(keyboard_handler)
 	SAVE_ALL
 	pushl %eax;
-	call update_stats_sysenter;
+	call statsEntrySys;
 	popl %eax;
 	EOI
 	call keyboard_rutine
 	pushl %eax;
-	call update_stats_exitSys;
+	call statsLeaveSys;
 	popl %eax;
 	RESTORE_ALL
 	iret
@@ -96,18 +96,25 @@ ENTRY(keyboard_handler)
 //v1
 ENTRY(system_call_handler)
 	SAVE_ALL;
+	push %eax;
+	call statsEntrySys;
+	pop %eax;
 	cmpl $0, %eax;
 	jl err;
 	cmpl $MAX_SYSCALL, %eax;
 	jg err;
 	call *sys_call_table(,%eax,4);
+	push %eax;
+	call statsLeaveSys;
+	pop %eax;
 	jmp fin;
 err:
-  movl $-ENOSYS, %eax;
+	movl $-ENOSYS, %eax;
 fin:
-  movl %eax, 0x18(%esp);
+  	movl %eax, 0x18(%esp);
 	RESTORE_ALL;
 	iret;
+
 //V2 sysenter
 ENTRY(syscall_handler_sysenter)
 		push $__USER_DS;
@@ -117,7 +124,7 @@ ENTRY(syscall_handler_sysenter)
 		push 4(%EBP)
 		SAVE_ALL
 		push %eax;
-		call update_stats_sysenter;
+		call statsEntrySys;
 		pop %eax;
 		cmpl $0, %EAX
 		jl sysenter_err
@@ -131,7 +138,7 @@ ENTRY(syscall_handler_sysenter)
 	sysenter_fin:
 		movl %EAX, 0x18(%esp)
 		push %eax;
-		call update_stats_exitSys;
+		call statsLeaveSys;
 		pop %eax;
 		RESTORE_ALL
 		movl (%esp), %edx
@@ -150,13 +157,6 @@ ENTRY(writeMsr)
 	pop %ebp
 	ret
 
-/*
-	*new
-	%EBP 	<-- %ebp
-	@ret 		+4%ebp
-	*new		+8%ebp
-
-*/
 ENTRY(task_switch)
 	push %ebp;
 	movl %esp, %ebp; //dynamic link

@@ -89,9 +89,7 @@ int sys_fork()
 	PID = incrementalPID++;
 	new->PID = PID;
 	new->estado = ST_READY;
-	struct stats aux;
-	new->estadisticas = aux;
-
+  	set_statics(new);
 	int i = (getEbp() - (int)(current()))/sizeof(int);
 
 	((union task_union*) new)->stack[i] = & ret_from_fork;
@@ -101,6 +99,15 @@ int sys_fork()
 	list_add_tail(list_aux, &readyqueue);
 
 	return PID;
+}
+void set_statics(struct task_struct *ts){
+	ts->estadisticas.user_ticks = 0;
+	ts->estadisticas.system_ticks = 0;
+	ts->estadisticas.blocked_ticks = 0;
+	ts->estadisticas.ready_ticks = 0;
+	ts->estadisticas.elapsed_total_ticks = get_ticks();
+	ts->estadisticas.total_trans = 0;
+	ts->estadisticas.remaining_ticks = 0;
 }
 #define TAMWRITE 4
 int sys_write(int fd, char * buffer, int size){
@@ -123,13 +130,10 @@ int sys_write(int fd, char * buffer, int size){
 	return ret;
 }
 int sys_gettime(){
-
 	return zeos_ticks;
-
 }
 void sys_exit()
 {
-	
 	page_table_entry * pt = get_PT(current());
 
 	for(int p = 0; p < NUM_PAG_DATA; ++p){
@@ -146,7 +150,6 @@ extern int qLeft;
 int sys_get_stats(int pid, struct stats *st){
 	if(pid < 0) return -EINVAL;
 	if(!access_ok(VERIFY_WRITE, st, sizeof(struct stats))) return -EFAULT;
-	struct task_struct *act;
 	int i;
 	for(i = 0;i<NR_TASKS; i++){
 		if(task[i].task.PID==pid){
