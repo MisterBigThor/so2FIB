@@ -86,40 +86,36 @@ void update_sched_data_rr(){
 }
 //necesary change process
 int needs_sched_rr(){
-	if ((qLeft==0)&&(!list_empty(&readyqueue))) return 1;
-	if (qLeft==0) qLeft = get_quantum(current());
-	return 0;
+	return (qLeft <= 0 && !list_empty(&readyqueue));
 }
 //update state current
 void update_process_state_rr(struct task_struct*t, struct list_head *dst_queue){
 	if(t->estado != ST_RUN) list_del(&t->list);
 	if(dst_queue == NULL){
-		list_add_tail(&(t->list), dst_queue);
-		if(dst_queue!=&readyqueue) t->estado=ST_BLOCKED;
-		else{
-			update_stats(&(t->estadisticas.system_ticks), &(t->estadisticas.elapsed_total_ticks));
-			t->estado=ST_READY;
-		}
+		t->estado =ST_RUN;
 	}
-	else t->estado=ST_RUN;
+	else{
+		list_add_tail(&t->list, dst_queue);
+		if(dst_queue = &readyqueue) t->estado = ST_READY;
+		else t->estado=ST_BLOCKED;
+	}
+	
 }
 //seleciona siguiente proceso a ejecutar:
 void sched_next_rr(void){
-	struct list_head *e;
-	struct task_struct *t;
-
 	if(!list_empty(&readyqueue)){
-		e = list_first(&readyqueue);
-		list_del(e);
-		t = list_head_to_task_struct(e);
+		struct list_head* next = list_first(&readyqueue);
+		struct task_struct* nextt = list_head_to_task_struct(next);
+		qLeft = nextt->quantum;
+		struct stats *st;
+		st = &nextt->estadisticas;
+		st->ready_ticks += get_ticks() - st->elapsed_total_ticks;
+		st->elapsed_total_ticks = get_ticks();
+		st->total_trans += 1;
+		update_process_state_rr(nextt, NULL);
+		task_switch((union task_union *) nextt);
 	}
-	else t = idle_task;
-	t->estado = ST_RUN;
-	qLeft = get_quantum(t);
-	update_stats(&(current()->estadisticas.system_ticks), &(current()->estadisticas.elapsed_total_ticks));
-	update_stats(&(t->estadisticas.ready_ticks), &(t->estadisticas.elapsed_total_ticks));
-	t->estadisticas.total_trans++;
-	task_switch((union task_union*)t);
+	else task_switch((union task_union *) idle_task);
 }
 void schedule(){
 	update_sched_data_rr();
