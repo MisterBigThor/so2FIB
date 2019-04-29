@@ -1,6 +1,20 @@
 #include <asm.h>
 
+/*
+	
 
+*/
+/*
+Para hacer una llamada a sistema hace falta:
+	pasar el numero de llamada por 
+	%eax, salvar %edx y %ecx (sysexit lo utiliza)
+	push @retorno
+	fake dinamic link
+	trap
+	pops(4)
+	resultado sysenter y return
+
+*/
 
 //pila antes de una syscall gettime:
 
@@ -12,11 +26,9 @@
 //%ebp
 //@retwrapper
 ENTRY(gettime)
-	push %ebp; //e. dinàmic
+	push %ebp; 
 	movl %esp, %ebp;
-
 	push %ebx;
-
 	movl $10,%eax; 	
 	push %ecx;
 	push %edx;
@@ -47,10 +59,7 @@ ENTRY(gettime)
 ENTRY(writefast)
 	push %ebp;
 	movl %esp, %ebp;
-
-	push %ebx; //salvar ebx i ecx, sysexit els utilitza
-
-
+	push %ebx;
 	movl 8(%ebp), %ebx 	//pasar a registres els parametres
 	movl 12(%ebp), %ecx
 	movl 16(%ebp), %edx
@@ -110,11 +119,6 @@ fitrap:
 ENTRY(getpid)
 	push %ebp;
 	movl %esp, %ebp;
-
-	push %ebx; //salvar ebx i ecx, sysexit els utilitza
-	push %esi;
-	push %edi;
-
 	movl $20, %eax; //num syscall y sysenter
 	push %ecx;
 	push %edx;
@@ -136,12 +140,9 @@ errPid:
 	movl %eax, errno;
 	movl $-1, %eax //retornara -1
 fiPid:
-	pop %edi;
-	pop %esi;
-	pop %ebx;
 	movl %ebp, %esp;
 	pop %ebp;
-ret;
+	ret;
 
 ENTRY(fork)
 	push %ebp;

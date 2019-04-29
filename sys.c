@@ -40,7 +40,7 @@ int sys_ni_syscall()
 
 int sys_getpid()
 {
-	if(current()->PID < 0) return -40;
+	//if(current()->PID < 0) return -40;
 	return current()->PID;
 }
 
@@ -50,7 +50,7 @@ int sys_fork()
 {
 	int PID=-1;
 	//get free task_struct
-	if (list_empty(&freequeue)) return -40;
+	if (list_empty(&freequeue)) return -ENOMEM;
 	struct list_head *list_aux = list_first(&freequeue);
 	list_del(list_aux);
 
@@ -129,28 +129,31 @@ int sys_gettime(){
 }
 void sys_exit()
 {
-	struct task_struct *aux = current();
+	
+	page_table_entry * pt = get_PT(current());
 
-	page_table_entry * pt = get_PT(aux);
 	for(int p = 0; p < NUM_PAG_DATA; ++p){
-		free_frame(pt[PAG_LOG_INIT_DATA+p].bits.pbase_addr);
+		free_frame(get_frame(pt, PAG_LOG_INIT_DATA+p));
 		del_ss_pag(pt, PAG_LOG_INIT_DATA+p);
 	}
-
-	update_process_state_rr(aux, &freequeue);
+	list_add_tail(&(current()->list), &freequeue);
+	current()->PID = -1;
 	sched_next_rr();
 }
+
+extern int qLeft;
+
 int sys_get_stats(int pid, struct stats *st){
-	if(pid < 0) return -40;
-	if(!access_ok(VERIFY_WRITE, st, sizeof(struct stats))) return -20;
+	if(pid < 0) return -EINVAL;
+	if(!access_ok(VERIFY_WRITE, st, sizeof(struct stats))) return -EFAULT;
 	struct task_struct *act;
-	int i = 0 ;
-	for(act = &(task[i].task); i<NR_TASKS; act = &(task[++i].task)){
-		if(act->PID == pid){
-			act->estadisticas.remaining_ticks = qLeft;
-			copy_to_user(&(act->estadisticas),st,sizeof(struct stats));
+	int i;
+	for(i = 0;i<NR_TASKS; i++){
+		if(task[i].task.PID==pid){
+			task[i].task.estadisticas.remaining_ticks=qLeft;
+			copy_to_user(&(task[i].task.estadisticas),st,sizeof(struct stats));
 			return 0;
 		}
 	}
-	return -33;
+	return -ESRCH;
 }

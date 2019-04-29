@@ -53,11 +53,7 @@ void keyboard_rutine(){
 void clock_rutine(){
   zeos_show_clock();
   zeos_ticks += 1;
-  update_sched_data_rr();
-  if(needs_sched_rr()) {
-    update_process_state_rr(current(), &readyqueue);
-    sched_next_rr();
-  }
+  schedule();
   return;  
 }
 
