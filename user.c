@@ -15,8 +15,8 @@ main(void)
 	itoa(getpid(), buff);
 	write(1, "PID ACTUAL: ", strlen("PID ACTUAL: "));
 	writefast(1, buff, strlen(buff));
-
-	runjp();
+	write(1, "\n", strlen("\n"));
+	//runjp();
 
 	//runjp_rank(0,0);
 
@@ -29,16 +29,16 @@ main(void)
 		writefast(1, "saliendo hijo\n", strlen("saliendo hijo\n"));
 		exit();
 	}
-//
+
 	else {
-	writefast(1,"padre",strlen("padre\n"));
+		writefast(1,"padre",strlen("padre\n"));
+		itoa(i, buff);
+		write(1, "PID hijo: ", strlen("PID hijo: "));
+		writefast(1, buff, strlen(buff));
 		get_stats(getpid(), & aux);
+		write(1, "\n", strlen("\n"));
 	}
 		
 
-
-//	runjp();
-	//runjp_rank(6,12);
-	//runjp_rank(14,32);
 	while(1) { }
 }
