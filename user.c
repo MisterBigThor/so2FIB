@@ -16,7 +16,7 @@ main(void)
 	write(1, "PID ACTUAL: ", strlen("PID ACTUAL: "));
 	writefast(1, buff, strlen(buff));
 
-//	runjp();
+	runjp();
 
 	//runjp_rank(0,0);
 

@@ -59,7 +59,7 @@ int sys_fork()
 	//inherit system data:
 	copy_data(current(), new, (int) sizeof(union task_union));
 	//initialize dir_pages_baseAddr:
-	if(allocate_DIR(new)<0) return -40;
+	if(allocate_DIR(new)<0) return -ENOMEM;
 	//inherit user data:
 	page_table_entry * pageNew = get_PT(new);
 	page_table_entry * pageParent = get_PT(current());
