@@ -47,17 +47,27 @@ void init_stats(struct stats *s){
 	s->total_trans = 0;
 	s->remaining_ticks = 0;
 }
-int allocate_DIR(struct task_struct *t) 
+
+extern page_table_entry dir_pages[NR_TASKS][TOTAL_PAGES];
+
+int refs_DIR[NR_TASKS];
+
+int allocate_DIR(struct task_struct *p) 
 {
-	int pos;
-
-	pos = ((int)t-(int)task)/sizeof(union task_union);
-
-	t->dir_pages_baseAddr = (page_table_entry*) &dir_pages[pos];
-
-	return 1;
+	for(int i = 0; i< NR_TASKS; ++i){
+		if(refs_DIR[i]==0){
+			p->dir_pages_baseAddr =(page_table_entry *) &dir_pages[i];
+			refs_DIR[i]++;
+			return 1;
+		}
+	}
+	return -1;
 }
-
+int get_DIR_position(struct task_struct *t){
+	int ini = (int) ((page_table_entry*) &dir_pages[0]);
+	int tsk = (int) (t->dir_pages_baseAddr);
+	return (tsk-ini)/sizeof(dir_pages[0]);
+}
 void cpu_idle(void)
 {
 	__asm__ __volatile__("sti": : :"memory");
@@ -70,14 +80,6 @@ void cpu_idle(void)
 
 #define DEFAULT_QUANTUM 5
 int qLeft;
-
-int get_quantum(struct task_struct *t){
-	return t->quantum;
-}
-void set_quantum(struct task_struct *t,int q){
-	t->quantum = q;
-}
-
 struct task_struct * idle_task= NULL; //global variable for easy access.
 
 //update scheduling && stats information
@@ -199,6 +201,9 @@ void init_sched(){
 		list_add(&(task[i].task.list), &freequeue);
 	}
 	INIT_LIST_HEAD(& readyqueue);
+	for (int i = 0; i < NR_TASKS; ++i){
+		refs_DIR[i] = 0;
+	}
 }
 
 
@@ -225,4 +230,11 @@ void statsLeaveSys(){
 	aux = & current()->estadisticas;
 	aux->system_ticks += get_ticks() - aux->elapsed_total_ticks;
 	aux->elapsed_total_ticks = get_ticks();	
+}
+
+int get_quantum(struct task_struct *t){
+	return t->quantum;
+}
+void set_quantum(struct task_struct *t,int q){
+	t->quantum = q;
 }
