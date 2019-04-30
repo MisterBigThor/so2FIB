@@ -105,7 +105,7 @@ void set_statics(struct task_struct *ts){
 	ts->estadisticas.system_ticks = 0;
 	ts->estadisticas.blocked_ticks = 0;
 	ts->estadisticas.ready_ticks = 0;
-	ts->estadisticas.elapsed_total_ticks = get_ticks();
+	ts->estadisticas.elapsed_total_ticks = 0;
 	ts->estadisticas.total_trans = 0;
 	ts->estadisticas.remaining_ticks = 0;
 }

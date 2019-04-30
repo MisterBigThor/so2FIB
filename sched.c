@@ -43,9 +43,9 @@ void init_stats(struct stats *s){
 	s->system_ticks = 0;
 	s->blocked_ticks = 0;
 	s->ready_ticks = 0;
-	s->elapsed_total_ticks = get_ticks();
+	s->elapsed_total_ticks = 0;
 	s->total_trans = 0;
-	s->remaining_ticks = get_ticks();
+	s->remaining_ticks = 0;
 }
 int allocate_DIR(struct task_struct *t) 
 {
@@ -86,7 +86,9 @@ void update_sched_data_rr(){
 }
 //necesary change process
 int needs_sched_rr(){
-	return (qLeft <= 0 && !list_empty(&readyqueue));
+	int r = (qLeft <= 0 && !list_empty(&readyqueue));
+	if(r) current()->estadisticas.total_trans++;
+	return r;
 }
 //update state current
 void update_process_state_rr(struct task_struct*t, struct list_head *dst_queue){
@@ -106,10 +108,14 @@ void sched_next_rr(void){
 	if(!list_empty(&readyqueue)){
 		struct list_head* next = list_first(&readyqueue);
 		struct task_struct* nextt = list_head_to_task_struct(next);
-		qLeft = DEFAULT_QUANTUM;
-		nextt->quantum = qLeft;
+
+		qLeft = get_quantum(nextt);
+
 		struct stats *st;
-		st = &nextt->estadisticas;
+		st = &current()->estadisticas; //antiguo
+		st->system_ticks += get_ticks() - st->elapsed_total_ticks;
+		st->elapsed_total_ticks = get_ticks();
+		st = &nextt->estadisticas; //nuevo
 		st->ready_ticks += get_ticks() - st->elapsed_total_ticks;
 		st->elapsed_total_ticks = get_ticks();
 		st->total_trans += 1;
