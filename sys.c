@@ -21,6 +21,7 @@
 extern int zeos_ticks;
 extern struct list_head freequeue, readyqueue;
 extern int qLeft;
+extern int refs_DIR[NR_TASKS];
 
 int incrementalPID = 2;
 
@@ -89,7 +90,7 @@ int sys_fork()
 	PID = incrementalPID++;
 	new->PID = PID;
 	new->estado = ST_READY;
-  	set_statics(new);
+  	init_stats(&new->estadisticas);
 	int i = (getEbp() - (int)(current()))/sizeof(int);
 
 	((union task_union*) new)->stack[i] = & ret_from_fork;
@@ -147,6 +148,7 @@ void sys_exit()
 
 extern int qLeft;
 
+
 int sys_get_stats(int pid, struct stats *st){
 	if(pid < 0) return -EINVAL;
 	if(!access_ok(VERIFY_WRITE, st, sizeof(struct stats))) return -EFAULT;
@@ -159,4 +161,24 @@ int sys_get_stats(int pid, struct stats *st){
 		}
 	}
 	return -ESRCH;
+}
+
+int sys_clone(void (*function)(void), void *stack){
+	if (!access_ok(VERIFY_WRITE, stack, 4) || 
+		!access_ok(VERIFY_READ, function, 4)) return -EFAULT;
+	if(list_empty(&freequeue)) return -ENOMEM;
+	
+	struct list_head * freePCB = list_first(&freequeue);
+	list_del(freePCB);
+
+	struct task_struct *tsThread = list_head_to_task_struct(freePCB);
+
+	copy_data((union task_union*)current(), (union task_union*)tsThread,sizeof(union task_union));
+	++refs_DIR[get_DIR_position(tsThread)];
+
+	//gestion pila sistema aki!
+	tsThread->PID = incrementalPID++;
+
+	init_stats(&(tsThread->estadisticas));
+	return tsThread->PID;
 }

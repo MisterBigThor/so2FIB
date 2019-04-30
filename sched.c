@@ -38,22 +38,15 @@ page_table_entry * get_PT (struct task_struct *t) {
 	return (page_table_entry *)(((unsigned int)(t->dir_pages_baseAddr->bits.pbase_addr))<<12);
 }
 
-void init_stats(struct stats *s){
-	s->user_ticks = 0;
-	s->system_ticks = 0;
-	s->blocked_ticks = 0;
-	s->ready_ticks = 0;
-	s->elapsed_total_ticks = 0;
-	s->total_trans = 0;
-	s->remaining_ticks = 0;
-}
-
 extern page_table_entry dir_pages[NR_TASKS][TOTAL_PAGES];
 
-int refs_DIR[NR_TASKS];
+
 
 int allocate_DIR(struct task_struct *p) 
 {
+	//int pos = ((int) p - (int) task) / sizeof(union task_union);
+	//p->dir_pages_baseAddr = &dir_pages[pos];
+	//return 1;
 	for(int i = 0; i< NR_TASKS; ++i){
 		if(refs_DIR[i]==0){
 			p->dir_pages_baseAddr =(page_table_entry *) &dir_pages[i];
@@ -100,7 +93,7 @@ void update_process_state_rr(struct task_struct*t, struct list_head *dst_queue){
 	}
 	else{
 		list_add_tail(&t->list, dst_queue);
-		if(dst_queue = &readyqueue) t->estado = ST_READY;
+		if(dst_queue == &readyqueue) t->estado = ST_READY;
 		else t->estado=ST_BLOCKED;
 	}
 	
@@ -237,4 +230,13 @@ int get_quantum(struct task_struct *t){
 }
 void set_quantum(struct task_struct *t,int q){
 	t->quantum = q;
+}
+void init_stats(struct stats *st){
+	st->user_ticks = 0;
+	st->system_ticks = 0;
+	st->blocked_ticks = 0;
+	st->ready_ticks = 0;
+	st->elapsed_total_ticks = 0;
+	st->total_trans = 0;
+	st->remaining_ticks = 0;
 }
