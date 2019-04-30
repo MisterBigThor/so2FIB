@@ -10,7 +10,7 @@
 #include <mm_address.h>
 #include <stats.h>
 
-#define NR_TASKS      50
+#define NR_TASKS      20
 #define KERNEL_STACK_SIZE	1024
 
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
@@ -31,6 +31,8 @@ union task_union {
 };
 
 extern union task_union task[NR_TASKS]; /* Vector de tasques */
+
+int refs_DIR[NR_TASKS];
 
 void writeMsr();
 
@@ -54,13 +56,13 @@ void inner_task_switch(union task_union*t);
 struct task_struct *list_head_to_task_struct(struct list_head *l);
 
 int allocate_DIR(struct task_struct *t);
+int get_DIR_position(struct task_struct *t);
 
 page_table_entry * get_PT (struct task_struct *t) ;
 
 page_table_entry * get_DIR (struct task_struct *t) ;
 
 int get_quantum(struct task_struct *t);
-
 void set_quantum(struct task_struct *t, int new_quantum);
 
 /* Headers for the scheduling policy */
@@ -69,4 +71,5 @@ void update_process_state_rr(struct task_struct *t, struct list_head *dest);
 int needs_sched_rr();
 void update_sched_data_rr();
 
+void init_stats(struct stats *st);
 #endif  /* __SCHED_H__ */
