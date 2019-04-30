@@ -113,3 +113,14 @@ ENTRY(get_stats)
 	pop %ebp
 	ret
 
+ENTRY(clone)
+	push %ebp;
+	movl %esp, %ebp;
+	movl 8(%ebp), %ebx;
+	movl 12(%ebp), %ecx;
+	SYSCALL(19)
+	CHECK_ERROR(clone.noError)
+	clone.noError:
+	pop %ebx;
+	pop %ebp;
+	ret;
