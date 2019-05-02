@@ -11,7 +11,6 @@ main(void)
 	/* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
 
-
 	if(MODE_USER){
 		write(1, "Escrito con write \n", strlen("Escrito con write \n"));
 		writefast(1,"Escrito con write fast \n",strlen("Escrito con write fast \n"));	
@@ -38,9 +37,11 @@ main(void)
 			write(1, "\n", strlen("\n"));
 		}
 	}
+
 	else{
 		runjp();
 		//runjp_rank(0,0);
 	}
+
 	while(1) { }
 }
