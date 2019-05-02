@@ -47,16 +47,15 @@ int allocate_DIR(struct task_struct *p)
 	for(int i = 0; i< NR_TASKS; ++i){
 		if(refs_DIR[i]==0){
 			p->dir_pages_baseAddr =(page_table_entry *) &dir_pages[i];
-			refs_DIR[i]++;
+			p->n_directorio = i;
+			
 			return 1;
 		}
 	}
 	return -1;
 }
 int get_DIR_position(struct task_struct *t){
-	int ini = (int) ((page_table_entry*) &dir_pages[0]);
-	int tsk = (int) (t->dir_pages_baseAddr);
-	return (tsk-ini)/sizeof(dir_pages[0]);
+	return t->n_directorio;
 }
 void cpu_idle(void)
 {
@@ -140,14 +139,14 @@ void init_idle (void)
 	ts->PID = 0; //asign PID 0
 	ts->quantum = DEFAULT_QUANTUM;
 	init_stats(&ts->estadisticas);
-	allocate_DIR(ts); //asign DIR
 	
+	allocate_DIR(ts); //asign DIR
+	refs_DIR[get_DIR_position(ts)]++;
 	tu->stack[KERNEL_STACK_SIZE - 1] = (unsigned long)&cpu_idle;
 	tu->stack[KERNEL_STACK_SIZE - 2] = 0;
 
-	tu->task.kernel_esp = (char *)& (tu->stack[KERNEL_STACK_SIZE - 2]);
-
-	idle_task = ts; 	
+	tu->task.kernel_esp = (char *)& (tu->stack[KERNEL_STACK_SIZE - 2]);		
+	idle_task = ts; 
 }
 
 void init_task1(void)
@@ -164,19 +163,21 @@ void init_task1(void)
 
 	init_stats(&ts->estadisticas);
 	allocate_DIR(ts);
+	refs_DIR[get_DIR_position(ts)]++;
 	set_user_pages(ts);
 	
 	tss.esp0=(DWord)& (tu->stack[KERNEL_STACK_SIZE]);
-	writeMsr(0x175, KERNEL_ESP(tu));
+	writeMsr(0x175, KERNEL_ESP(tu)); 
 	set_cr3(ts->dir_pages_baseAddr);
 }
 
 
 void inner_task_switch(union task_union*t){
 	tss.esp0 = KERNEL_ESP(t);
-	writeMsr(0x175, (int) KERNEL_ESP(t));
-
-	set_cr3(t->task.dir_pages_baseAddr);
+	writeMsr(0x175, (int)KERNEL_ESP(t));
+	if(current()->dir_pages_baseAddr == 
+		t->task.dir_pages_baseAddr)	set_cr3(get_DIR(t));
+	
 	current() -> kernel_esp = (char *) getEbp();
 
 	setEsp(t->task.kernel_esp);

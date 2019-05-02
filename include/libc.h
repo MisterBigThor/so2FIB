@@ -12,6 +12,8 @@ int write(int fd, char *buffer, int size);
 
 int writefast(int fd, char *buffer, int size);
 
+int clone (void (*function)(void), void *stack);
+
 void itoa(int a, char *b);
 
 int strlen(char *a);

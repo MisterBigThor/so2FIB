@@ -11,7 +11,7 @@
 #include <stats.h>
 #include <utils.h>
 
-#define NR_TASKS      10
+#define NR_TASKS      15
 #define KERNEL_STACK_SIZE	1024
 
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
@@ -23,6 +23,7 @@ struct task_struct {
 	struct list_head list;
 	enum state_t estado;
 	struct stats estadisticas;
+	int n_directorio;
 	int quantum;
 };
 

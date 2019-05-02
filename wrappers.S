@@ -116,6 +116,7 @@ ENTRY(get_stats)
 ENTRY(clone)
 	push %ebp;
 	movl %esp, %ebp;
+	push %ebx;
 	movl 8(%ebp), %ebx;
 	movl 12(%ebp), %ecx;
 	SYSCALL(19)
@@ -124,3 +125,48 @@ ENTRY(clone)
 	pop %ebx;
 	pop %ebp;
 	ret;
+
+	ENTRY(sem_init)
+	push %ebp
+	movl %esp, %ebp;
+	movl 8(%ebp),%ebx;
+	movl 12(%ebp),%ecx;
+	SYSCALL(21);
+	CHECK_ERROR(semInitErr)
+	semInitErr:
+	popl %ebx;
+	popl %ebp;
+	ret;
+
+ENTRY(sem_wait)
+	push %ebp
+	movl %esp, %ebp;
+	movl 8(%ebp), %ebx;
+	SYSCALL(22);
+	CHECK_ERROR(semWaitErr)
+	semWaitErr:
+	popl %ebx;
+	popl %ebp;
+	ret;
+
+ENTRY(sem_signal)
+	push %ebp
+	movl %esp, %ebp;
+	movl 8(%ebp), %ebx;
+	SYSCALL(23);
+	CHECK_ERROR(semSignalErr)
+	semSignalErr:
+	popl %ebx;
+	popl %ebp;
+	ret;	
+
+ENTRY(sem_destroy)
+	push %ebp
+	movl %esp, %ebp;
+	movl 8(%ebp), %ebx;
+	SYSCALL(24);
+	CHECK_ERROR(semDestroyErr)
+	semDestroyErr:
+	popl %ebx;
+	popl %ebp;
+	ret;	

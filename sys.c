@@ -52,7 +52,6 @@ int ret_from_fork(){return 0;}
 
 int sys_fork()
 {
-	int PID=-1;
 	//get free task_struct
 	if (list_empty(&freequeue)) return -ENOMEM;
 	struct list_head *list_aux = list_first(&freequeue);
@@ -90,8 +89,8 @@ int sys_fork()
 
 	set_cr3(get_DIR(current()));
 
-	PID = incrementalPID++;
-	new->PID = PID;
+	
+	new->PID = incrementalPID++;
 	new->estado = ST_READY;
   	init_stats(&new->estadisticas);
 	int i = (getEbp() - (int)(current()))/sizeof(int);
@@ -102,7 +101,7 @@ int sys_fork()
 
 	list_add_tail(list_aux, &readyqueue);
 
-	return PID;
+	return new->PID;
 }
 
 
@@ -139,7 +138,10 @@ void sys_exit()
 		}
 	}
 	list_add_tail(&(current()->list), &freequeue);
+//	for(int i = 0; i < 20; ++i)
+		//if(semaphores[i].owner == current()) sys_sem_destroy(n_sem);
 	current()->PID = -1;
+	update_process_state_rr(current(), &freequeue);
 	sched_next_rr();
 }
 
@@ -170,12 +172,14 @@ int sys_clone(void (*function)(void), void *stack){
 	union task_union *tuThred = (union task_union*) current();
 
 	copy_data((union task_union*)current(), tuThred,sizeof(union task_union));
-	++refs_DIR[get_DIR_position(tsThread)];
+	
+	++refs_DIR[current()->n_directorio];
 
-	int pEBP =((unsigned long) getEbp() - (unsigned long) current())/4;
+	int pEBP =((int)getEbp() - (int) current())/sizeof(int);
 	tsThread->kernel_esp = (unsigned long) &(tuThred->stack[pEBP]);
-	tuThred->stack[KERNEL_STACK_SIZE-5] = (unsigned long) function;
-	tuThred->stack[KERNEL_STACK_SIZE-2] = (unsigned long) stack;
+	tuThred->stack[KERNEL_STACK_SIZE-2] = (int) stack;
+	tuThred->stack[KERNEL_STACK_SIZE-5] = (int) function;
+	
 
 	tsThread->PID = incrementalPID++;
 	tsThread->estado = ST_READY;
