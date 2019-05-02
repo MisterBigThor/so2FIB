@@ -17,6 +17,7 @@
 //variables globals sistema:
 
 int zeos_ticks = 0;
+struct semaphore semaphores[20];
 
 int (*usr_main)(void) = (void *) PH_USER_START;
 unsigned int *p_sys_size = (unsigned int *) KERNEL_START;

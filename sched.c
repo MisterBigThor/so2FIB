@@ -44,9 +44,6 @@ extern page_table_entry dir_pages[NR_TASKS][TOTAL_PAGES];
 
 int allocate_DIR(struct task_struct *p) 
 {
-	int pos = ((int) p - (int) task) / sizeof(union task_union);
-	p->dir_pages_baseAddr = &dir_pages[pos];
-	return 1;
 	for(int i = 0; i< NR_TASKS; ++i){
 		if(refs_DIR[i]==0){
 			p->dir_pages_baseAddr =(page_table_entry *) &dir_pages[i];

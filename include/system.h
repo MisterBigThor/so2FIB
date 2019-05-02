@@ -7,6 +7,9 @@
 
 #include <types.h>
 
+#include <semaphores.h>
+
+extern struct semaphore semaphores[20];
 
 extern TSS         tss;
 extern Descriptor* gdt;
