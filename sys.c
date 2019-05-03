@@ -29,7 +29,7 @@ extern int qLeft;
 
 int incrementalPID = 2;
 
-int getEbp();
+unsigned long getEbp();
 
 int check_fd(int fd, int permissions)
 {
@@ -129,6 +129,7 @@ int sys_gettime(){
 }
 void sys_exit()
 {	
+	current()->PID = -1;
 	--refs_DIR[get_DIR_position(current())];
 	if(refs_DIR[get_DIR_position(current())] == 0){
 		page_table_entry * pt = get_PT(current());	
@@ -140,7 +141,7 @@ void sys_exit()
 	list_add_tail(&(current()->list), &freequeue);
 //	for(int i = 0; i < 20; ++i)
 		//if(semaphores[i].owner == current()) sys_sem_destroy(n_sem);
-	current()->PID = -1;
+	
 	update_process_state_rr(current(), &freequeue);
 	sched_next_rr();
 }
@@ -169,14 +170,14 @@ int sys_clone(void (*function)(void), void *stack){
 	struct list_head * freePCB = list_first(&freequeue);
 	list_del(freePCB);
 	struct task_struct *tsThread = list_head_to_task_struct(freePCB);
-	union task_union *tuThred = (union task_union*) current();
+	union task_union *tuThred = (union task_union*) tsThread;
 
-	copy_data((union task_union*)current(), tuThred,sizeof(union task_union));
+	copy_data((union task_union*)current(), tsThread,sizeof(union task_union));
 	
 	++refs_DIR[current()->n_directorio];
 
-	int pEBP =((int)getEbp() - (int) current())/sizeof(int);
-	tsThread->kernel_esp = (unsigned long) &(tuThred->stack[pEBP]);
+	int pEBP =(getEbp() - (int) current())/sizeof(int);
+	tsThread->kernel_esp = &tuThred->stack[pEBP];
 	tuThred->stack[KERNEL_STACK_SIZE-2] = (int) stack;
 	tuThred->stack[KERNEL_STACK_SIZE-5] = (int) function;
 	
@@ -198,16 +199,16 @@ int sys_sem_init(int n_sem, unsigned int value){
 	semaphores[n_sem].state = FREE_SEM;
 	semaphores[n_sem].counter = value;
 	semaphores[n_sem].owner = current();
-	INIT_LIST_HEAD(& (semaphores[n_sem].blocked_queue));
+	INIT_LIST_HEAD(& (semaphores[n_sem].blockedQueue));
 	return 0;
 }
 int sys_sem_destroy(int n_sem){
 	if(n_sem <0 || n_sem >= 20) return -EINVAL;
 	if(semaphores[n_sem].state == FREE_SEM) return EINVAL;
 	if(semaphores[n_sem].owner != current()) return -EPERM;
-	while(!list_empty(&(semaphores[n_sem].blocked_queue))){
+	while(!list_empty(&(semaphores[n_sem].blockedQueue))){
 		struct task_struct *tsUnblock = 
-			list_head_to_task_struct(list_first(&semaphores[n_sem].blocked_queue));
+			list_head_to_task_struct(list_first(&semaphores[n_sem].blockedQueue));
 		update_process_state_rr(tsUnblock, &readyqueue);
 	}
 	semaphores[n_sem].state = FREE_SEM;
@@ -215,11 +216,21 @@ int sys_sem_destroy(int n_sem){
 }
 int sys_sem_signal(int n_sem){
 	if(n_sem <0 || n_sem >= 20) return -EINVAL;
-	if(semaphores[n_sem].state == FREE_SEM) return EINVAL;
-	return 0;
+	struct semaphore *s = &semaphores[n_sem];
+	if(s->state == FREE_SEM) return -EINVAL;
+	if(s->owner <= 0) return -EINVAL;
+	if(list_empty(&s->blockedQueue)) s->counter++;
+	else update_process_state_rr(list_head_to_task_struct(list_first(&s->blockedQueue)), &readyqueue);
+	return 1;
 }
 int sys_sem_wait(int n_sem){
 	if(n_sem <0 || n_sem >= 20) return -EINVAL;
-	if(semaphores[n_sem].state == FREE_SEM) return EINVAL;
+	struct semaphore *s = &semaphores[n_sem];
+	if(s->state == FREE_SEM) return -EINVAL;
+	if(s->owner <= 0) return -EINVAL;
+	if(s->counter <= 0){
+
+	}
+	else s->counter--;
 	return 0;
 }

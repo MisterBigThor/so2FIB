@@ -4,15 +4,17 @@ char buff[24];
 unsigned long stackClone[120];
 int pid;
 
-#define MODE_USER 1
+#define MODE_USER 0
+
 
 void doStuff(){
+	char buffS[12];
 	write(1, "\n", strlen("\n"));
 	write(1, "PID ACTUAL: ", strlen("PID ACTUAL: "));
-	itoa(getpid(), buff);
-	writefast(1,buff, strlen(buff));
+	itoa(getpid(), buffS);//buffer buff hay data race!?
+	writefast(1,buffS, strlen(buffS));
 	for(int i = 0; i < 10; ++i)
-		write(1, "doStuff", strlen("doStuff"));
+		write(1, "-doStuff-", strlen("-doStuff-"));
 
 	exit();
 }
@@ -20,9 +22,7 @@ void doStuff(){
 int __attribute__ ((__section__(".text.main")))
 main(void)
 {
-	itoa(getpid(), buff);
-	write(1, "PID ACTUAL: ", strlen("PID ACTUAL: "));
-	writefast(1,buff, strlen(buff));
+	
 	int pidClone = clone(doStuff, stackClone);
 	itoa(pidClone, buff);
 	writefast(1,buff, strlen(buff));

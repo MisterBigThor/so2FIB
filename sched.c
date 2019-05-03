@@ -48,7 +48,7 @@ int allocate_DIR(struct task_struct *p)
 		if(refs_DIR[i]==0){
 			p->dir_pages_baseAddr =(page_table_entry *) &dir_pages[i];
 			p->n_directorio = i;
-			
+			refs_DIR[i]++;
 			return 1;
 		}
 	}

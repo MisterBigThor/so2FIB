@@ -8,7 +8,7 @@ struct semaphore{
 	enum state_sem state;
 	struct task_struct* owner;
 	int counter;
-	struct list_head blocked_queue;
+	struct list_head blockedQueue;
 };
 
 
