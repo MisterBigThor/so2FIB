@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stats.h>
 
-#include <system.h>
+#include <semaphores.h>
 
 #define LECTURA 0
 #define ESCRIPTURA 1
@@ -26,6 +26,7 @@ extern struct list_head freequeue, readyqueue;
 extern int qLeft;
 extern int refs_DIR[NR_TASKS];
 extern int qLeft;
+extern struct semaphore semaphores[20];
 
 int incrementalPID = 2;
 
@@ -50,17 +51,15 @@ int sys_getpid()
 
 int ret_from_fork(){return 0;}
 
-int sys_fork()
-{
-	//get free task_struct
+int sys_fork(){
+	
 	if (list_empty(&freequeue)) return -ENOMEM;
 	struct list_head *list_aux = list_first(&freequeue);
 	list_del(list_aux);
 
 	struct task_struct *new = list_head_to_task_struct(list_aux);
-	//inherit system data:
+	
 	copy_data(current(), new, (int) sizeof(union task_union));
-	//initialize dir_pages_baseAddr:
 	if(allocate_DIR(new)<0) return -ENOMEM;
 	//inherit user data:
 	page_table_entry * pageNew = get_PT(new);
@@ -139,14 +138,12 @@ void sys_exit()
 		}
 	}
 	list_add_tail(&(current()->list), &freequeue);
-//	for(int i = 0; i < 20; ++i)
-		//if(semaphores[i].owner == current()) sys_sem_destroy(n_sem);
+	for(int i = 0; i < 20; ++i)
+		if(semaphores[i].owner == current()->PID) sys_sem_destroy(i);
 	
 	update_process_state_rr(current(), &freequeue);
 	sched_next_rr();
 }
-
-
 
 
 int sys_get_stats(int pid, struct stats *st){
@@ -166,7 +163,7 @@ int sys_get_stats(int pid, struct stats *st){
 int sys_clone(void (*function)(void), void *stack){
 	if (!access_ok(VERIFY_WRITE, stack, 4) || !access_ok(VERIFY_READ, function, 4)) return -EFAULT;
 	if(list_empty(&freequeue)) return -ENOMEM;
-	
+
 	struct list_head * freePCB = list_first(&freequeue);
 	list_del(freePCB);
 	struct task_struct *tsThread = list_head_to_task_struct(freePCB);
@@ -191,34 +188,37 @@ int sys_clone(void (*function)(void), void *stack){
 	return tsThread->PID;
 }
 
-extern struct semaphore semaphores[20];
+
 
 int sys_sem_init(int n_sem, unsigned int value){
-	if(n_sem <0 || n_sem >= 20) return -EINVAL;
-	if(semaphores[n_sem].state == USED_SEM) return EBUSY;
-	semaphores[n_sem].state = FREE_SEM;
-	semaphores[n_sem].counter = value;
-	semaphores[n_sem].owner = current();
+	if(n_sem < 0) return -EINVAL;
+	if(n_sem < 0 || n_sem >= 20) return -EINVAL;
+	struct semaphore *s = &semaphores[n_sem];
+	if(s->state == USED_SEM) return -EBUSY;
+	s->state = FREE_SEM;
+	s->counter = value;
+	s->owner = current()->PID;
 	INIT_LIST_HEAD(& (semaphores[n_sem].blockedQueue));
 	return 0;
 }
 int sys_sem_destroy(int n_sem){
-	if(n_sem <0 || n_sem >= 20) return -EINVAL;
-	if(semaphores[n_sem].state == FREE_SEM) return EINVAL;
-	if(semaphores[n_sem].owner != current()) return -EPERM;
+	if(n_sem < 0 || n_sem >= 20) return -EINVAL;
+	struct semaphore *s = &semaphores[n_sem];
+	if(s->state == FREE_SEM) return -EINVAL;
+	if(s->owner != current()->PID) return -EPERM;
 	while(!list_empty(&(semaphores[n_sem].blockedQueue))){
 		struct task_struct *tsUnblock = 
 			list_head_to_task_struct(list_first(&semaphores[n_sem].blockedQueue));
 		update_process_state_rr(tsUnblock, &readyqueue);
 	}
-	semaphores[n_sem].state = FREE_SEM;
+	s->state = FREE_SEM;
 	return 0;
 }
 int sys_sem_signal(int n_sem){
 	if(n_sem <0 || n_sem >= 20) return -EINVAL;
 	struct semaphore *s = &semaphores[n_sem];
 	if(s->state == FREE_SEM) return -EINVAL;
-	if(s->owner <= 0) return -EINVAL;
+	
 	if(list_empty(&s->blockedQueue)) s->counter++;
 	else update_process_state_rr(list_head_to_task_struct(list_first(&s->blockedQueue)), &readyqueue);
 	return 1;
@@ -227,8 +227,9 @@ int sys_sem_wait(int n_sem){
 	if(n_sem <0 || n_sem >= 20) return -EINVAL;
 	struct semaphore *s = &semaphores[n_sem];
 	if(s->state == FREE_SEM) return -EINVAL;
-	if(s->owner <= 0) return -EINVAL;
 	if(s->counter <= 0){
+		exitRunCurrent(&s->blockedQueue);
+		sched_next_rr();
 
 	}
 	else s->counter--;

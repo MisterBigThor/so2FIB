@@ -96,7 +96,7 @@ ENTRY(fork)
 ENTRY(exit)
 	push %ebp;
 	movl %esp, %ebp;
-	SYSCALL(1);
+	SYSCALL(1);	
 	pop %ebp;
 	ret;
 
@@ -126,14 +126,15 @@ ENTRY(clone)
 	pop %ebp;
 	ret;
 
-	ENTRY(sem_init)
+ENTRY(sem_init)
 	push %ebp
 	movl %esp, %ebp;
+	push %ebx;
 	movl 8(%ebp),%ebx;
 	movl 12(%ebp),%ecx;
 	SYSCALL(21);
-	CHECK_ERROR(semInitErr)
-	semInitErr:
+	CHECK_ERROR(semInit.noErr)
+	semInit.noErr:
 	popl %ebx;
 	popl %ebp;
 	ret;
@@ -141,10 +142,11 @@ ENTRY(clone)
 ENTRY(sem_wait)
 	push %ebp
 	movl %esp, %ebp;
+	push %ebx;
 	movl 8(%ebp), %ebx;
 	SYSCALL(22);
-	CHECK_ERROR(semWaitErr)
-	semWaitErr:
+	CHECK_ERROR(semWait.noErr)
+	semWait.noErr:
 	popl %ebx;
 	popl %ebp;
 	ret;
@@ -152,10 +154,11 @@ ENTRY(sem_wait)
 ENTRY(sem_signal)
 	push %ebp
 	movl %esp, %ebp;
+	push %ebx;
 	movl 8(%ebp), %ebx;
 	SYSCALL(23);
-	CHECK_ERROR(semSignalErr)
-	semSignalErr:
+	CHECK_ERROR(semSignal.noErr)
+	semSignal.noErr:
 	popl %ebx;
 	popl %ebp;
 	ret;	
@@ -163,10 +166,11 @@ ENTRY(sem_signal)
 ENTRY(sem_destroy)
 	push %ebp
 	movl %esp, %ebp;
+	push %ebx;
 	movl 8(%ebp), %ebx;
 	SYSCALL(24);
-	CHECK_ERROR(semDestroyErr)
-	semDestroyErr:
+	CHECK_ERROR(semDestroy.noErr)
+	semDestroy.noErr:
 	popl %ebx;
 	popl %ebp;
 	ret;	

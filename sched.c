@@ -5,7 +5,7 @@
 #include <sched.h>
 #include <mm.h>
 #include <io.h>
-
+#include <semaphores.h>
 
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
@@ -19,7 +19,7 @@ unsigned long getEbp();
 void setEsp();
 void writeMsr(int msr, int data);
 
-
+struct semaphore semaphores[20];
 
 extern struct list_head blocked;
 
@@ -194,6 +194,10 @@ void init_sched(){
 	INIT_LIST_HEAD(& readyqueue);
 	for (int i = 0; i < NR_TASKS; ++i){
 		refs_DIR[i] = 0;
+	}
+	for(int i = 0; i < 20; ++i){
+		semaphores[i].counter = 0;
+		semaphores[i].state = FREE_SEM;
 	}
 }
 

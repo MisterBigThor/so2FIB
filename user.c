@@ -22,13 +22,11 @@ void doStuff(){
 int __attribute__ ((__section__(".text.main")))
 main(void)
 {
-	
-	int pidClone = clone(doStuff, stackClone);
-	itoa(pidClone, buff);
-	writefast(1,buff, strlen(buff));
-	
 
-	if(MODE_USER){
+	if(MODE_USER == 1){
+		int pidClone = clone(doStuff, stackClone);
+		itoa(pidClone, buff);
+		writefast(1,buff, strlen(buff));
 		write(1, "Escrito con write \n", strlen("Escrito con write \n"));
 		writefast(1,"Escrito con write fast \n",strlen("Escrito con write fast \n"));	
 		itoa(getpid(), buff);
@@ -52,9 +50,13 @@ main(void)
 			write(1, buff, strlen(buff));
 			get_stats(getpid(), & aux);
 			write(1, "\n", strlen("\n"));
-			
 		}
 		
+	}
+	else if(MODE_USER == 2){
+		int i = sem_init(-1, 2);
+		itoa(i, buff);
+		writefast(1, buff, strlen(buff));
 	}
 
 	else{

@@ -130,7 +130,6 @@ ENTRY(syscall_handler_sysenter)
 		jl sysenter_err
 		cmpl $MAX_SYSCALL, %EAX
 		jg sysenter_err
-
 		call *sys_call_table(, %eax, 0x04)
 		jmp sysenter_fin
 	sysenter_err:	
