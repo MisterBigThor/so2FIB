@@ -175,8 +175,8 @@ void init_task1(void)
 void inner_task_switch(union task_union*t){
 	tss.esp0 = KERNEL_ESP(t);
 	writeMsr(0x175, (int)KERNEL_ESP(t));
-	if(current()->dir_pages_baseAddr == 
-		t->task.dir_pages_baseAddr)	set_cr3(get_DIR(t));
+	
+	set_cr3(get_DIR(t));
 	
 	current() -> kernel_esp = (char *) getEbp();
 
