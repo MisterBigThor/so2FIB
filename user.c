@@ -6,7 +6,6 @@ int pid;
 
 #define MODE_USER 0
 
-
 void doStuff(){
 	char buffS[12];
 	write(1, "\n", strlen("\n"));
@@ -22,7 +21,6 @@ void doStuff(){
 int __attribute__ ((__section__(".text.main")))
 main(void)
 {
-
 	if(MODE_USER == 1){
 		int pidClone = clone(doStuff, stackClone);
 		itoa(pidClone, buff);
@@ -50,13 +48,13 @@ main(void)
 			write(1, buff, strlen(buff));
 			get_stats(getpid(), & aux);
 			write(1, "\n", strlen("\n"));
-		}
-		
+		}	
 	}
 	else if(MODE_USER == 2){
-		int i = sem_init(-1, 2);
-		itoa(i, buff);
-		writefast(1, buff, strlen(buff));
+		sem_init(-1, 2);
+		perror();
+		sem_init(2, 0);
+		sem_init(2, 0);
 	}
 
 	else{

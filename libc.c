@@ -22,6 +22,9 @@ void perror(void){
     case EFAULT:
       write(1, "Mal tamaño", 10);
       break;
+    case EINVAL:
+      write(1, "Malos parametros", strlen("Malos parametros"));
+      break;  
     default:
       write(1, "No error", 8);
       break;

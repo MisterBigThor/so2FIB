@@ -189,7 +189,6 @@ int sys_clone(void (*function)(void), void *stack){
 }
 
 
-
 int sys_sem_init(int n_sem, unsigned int value){
 	if(n_sem < 0) return -EINVAL;
 	if(n_sem < 0 || n_sem >= 20) return -EINVAL;

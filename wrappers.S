@@ -11,6 +11,7 @@ Para hacer una llamada a sistema hace falta:
 */
 #define SYSCALL(syscalln) \
 	leal syscall_ret##syscalln, %eax; \
+	
 	push %eax; \
 	movl $syscalln, %eax; \
 	push %ebp; \
