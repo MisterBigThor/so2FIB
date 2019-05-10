@@ -1,0 +1,34 @@
+#!/bin/bash   
+
+echo ===========================
+echo 1.JpE1 
+echo 2.JpE2 
+echo 3.JpE3Semaphores
+echo 4.JpE3Clone 
+echo 5.JpE4
+echo ===========================
+
+read op
+
+case $op in
+	1)
+		rm libjp.a
+		ln -s E1/libjp1.a libjp.a
+		;;
+	2)
+		rm libjp.a
+		ln -s E2/libjp2.a libjp.a
+		;;
+	3)
+		rm libjp.a
+		ln -s E3/libjpsemaphores.a libjp.a
+		;;
+	4)
+		rm libjp.a
+		ln -s E3/libjpclone.a libjp.a
+		;;
+	5) echo notImplemented;;
+esac
+
+make clean
+make emul

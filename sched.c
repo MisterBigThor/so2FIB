@@ -227,7 +227,7 @@ void statsLeaveSys(){
 	aux->elapsed_total_ticks = get_ticks();	
 }
 
-int get_quantum(struct task_struct *t){
+int get_quantum(struct task_struct *t){	
 	return t->quantum;
 }
 void set_quantum(struct task_struct *t,int q){
