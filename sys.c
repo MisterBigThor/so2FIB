@@ -187,50 +187,68 @@ int sys_clone(void (*function)(void), void *stack){
 
 	return tsThread->PID;
 }
-
+int cerca_sem_lliure(){
+	struct semaphore s;	
+	for(int i = 0; i<20; ++i){
+		s = semaphores[i];
+		if(s.state == FREE_SEM) return i;
+	}
+	return -1;
+}
+int cerca_sem(int n_sem){
+	struct semaphore s;
+	for(int i = 0; i < 20; ++i){
+		s = semaphores[i];
+		if(s.n_sem == n_sem) return i;
+	}
+	return -1;
+}
 
 int sys_sem_init(int n_sem, unsigned int value){
-	if(n_sem < 0) return -EINVAL;
-	if(n_sem < 0 || n_sem >= 20) return -EINVAL;
-	struct semaphore *s = &semaphores[n_sem];
-	if(s->state == USED_SEM) return -EBUSY;
-	s->state = FREE_SEM;
-	s->counter = value;
-	s->owner = current()->PID;
-	INIT_LIST_HEAD(& (semaphores[n_sem].blockedQueue));
+	if(value > 0) return -EAGAIN;
+	if(cerca_sem(n_sem) == -1) return -EBUSY;
+	int i = cerca_sem_lliure();
+	struct semaphore s = semaphores[i];
+	s.n_sem = i;
+	s.state = USED_SEM;
+	s.counter = value;
+	s.owner = current()->PID;
+	INIT_LIST_HEAD(& (s.blockedQueue));
 	return 0;
 }
 int sys_sem_destroy(int n_sem){
-	if(n_sem < 0 || n_sem >= 20) return -EINVAL;
-	struct semaphore *s = &semaphores[n_sem];
-	if(s->state == FREE_SEM) return -EINVAL;
-	if(s->owner != current()->PID) return -EPERM;
+	int i = cerca_sem(n_sem);
+	if(i == -1) return -EINVAL;
+	struct semaphore s = semaphores[i];
+	if(s.state == FREE_SEM) return -EINVAL;
+	if(s.owner != current()->PID) return -EPERM;
 	while(!list_empty(&(semaphores[n_sem].blockedQueue))){
 		struct task_struct *tsUnblock = 
 			list_head_to_task_struct(list_first(&semaphores[n_sem].blockedQueue));
 		update_process_state_rr(tsUnblock, &readyqueue);
 	}
-	s->state = FREE_SEM;
+	s.state = FREE_SEM;
+	s.n_sem = -1;
 	return 0;
 }
 int sys_sem_signal(int n_sem){
-	if(n_sem <0 || n_sem >= 20) return -EINVAL;
-	struct semaphore *s = &semaphores[n_sem];
-	if(s->state == FREE_SEM) return -EINVAL;
-	
-	if(list_empty(&s->blockedQueue)) s->counter++;
-	else update_process_state_rr(list_head_to_task_struct(list_first(&s->blockedQueue)), &readyqueue);
+	int i = cerca_sem(n_sem);
+	if(i == -1) return -EINVAL;
+	struct semaphore s = semaphores[n_sem];
+	if(s.state == FREE_SEM) return -EINVAL;
+	if(list_empty(&s.blockedQueue)) s.counter++;
+	else update_process_state_rr(list_head_to_task_struct(list_first(&s.blockedQueue)), &readyqueue);
 	return 1;
 }
 int sys_sem_wait(int n_sem){
-	if(n_sem <0 || n_sem >= 20) return -EINVAL;
-	struct semaphore *s = &semaphores[n_sem];
-	if(s->state == FREE_SEM) return -EINVAL;
-	if(s->counter <= 0){
-		exitRunCurrent(&s->blockedQueue);
+	int i = cerca_sem(n_sem);
+	if(i == -1) return -EINVAL;
+	struct semaphore s = semaphores[n_sem];
+	if(s.state == FREE_SEM) return -EINVAL;
+	if(s.counter <= 0){
+		exitRunCurrent(&s.blockedQueue);
 		sched_next_rr();
-
 	}
-	else s->counter--;
+	else s.counter--;
 	return 0;
 }

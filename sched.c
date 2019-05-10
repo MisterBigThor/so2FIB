@@ -176,9 +176,9 @@ void inner_task_switch(union task_union*t){
 	tss.esp0 = KERNEL_ESP(t);
 	writeMsr(0x175, (int)KERNEL_ESP(t));
 	
-	set_cr3(get_DIR(t));
-	
-	current() -> kernel_esp = (char *) getEbp();
+	set_cr3(get_DIR(t)); //??
+	if(current()->n_directorio != t->task.n_directorio)
+		current() -> kernel_esp = (char *) getEbp();
 
 	setEsp(t->task.kernel_esp);
 
