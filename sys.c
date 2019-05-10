@@ -139,7 +139,7 @@ void sys_exit()
 	}
 	list_add_tail(&(current()->list), &freequeue);
 	for(int i = 0; i < 20; ++i)
-		if(semaphores[i].owner == current()->PID) sys_sem_destroy(i);
+		if(semaphores[i].owner == current()->PID) sys_sem_destroy(semaphores[i].n_sem);
 	
 	update_process_state_rr(current(), &freequeue);
 	sched_next_rr();
@@ -199,21 +199,20 @@ int cerca_sem(int n_sem){
 	struct semaphore s;
 	for(int i = 0; i < 20; ++i){
 		s = semaphores[i];
-		if(s.n_sem == n_sem) return i;
+		if(s.n_sem == n_sem && s.state == USED_SEM) return i;
 	}
 	return -1;
 }
 
 int sys_sem_init(int n_sem, unsigned int value){
-	if(value > 0) return -EAGAIN;
-	if(cerca_sem(n_sem) == -1) return -EBUSY;
+	if(cerca_sem(n_sem) != -1) return -EBUSY; //ya existe sem
 	int i = cerca_sem_lliure();
 	struct semaphore s = semaphores[i];
-	s.n_sem = i;
+	s.n_sem = n_sem;
 	s.state = USED_SEM;
 	s.counter = value;
 	s.owner = current()->PID;
-	INIT_LIST_HEAD(& (s.blockedQueue));
+	INIT_LIST_HEAD(&(s.blockedQueue));
 	return 0;
 }
 int sys_sem_destroy(int n_sem){
@@ -222,9 +221,9 @@ int sys_sem_destroy(int n_sem){
 	struct semaphore s = semaphores[i];
 	if(s.state == FREE_SEM) return -EINVAL;
 	if(s.owner != current()->PID) return -EPERM;
-	while(!list_empty(&(semaphores[n_sem].blockedQueue))){
+	while(!list_empty(&(s.blockedQueue))){
 		struct task_struct *tsUnblock = 
-			list_head_to_task_struct(list_first(&semaphores[n_sem].blockedQueue));
+			list_head_to_task_struct(list_first(&s.blockedQueue));
 		update_process_state_rr(tsUnblock, &readyqueue);
 	}
 	s.state = FREE_SEM;
