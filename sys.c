@@ -44,8 +44,7 @@ int sys_ni_syscall()
 	return -ENOSYS; /*ENOSYS*/
 }
 
-int sys_getpid()
-{
+int sys_getpid(){
 	return current()->PID;
 }
 
@@ -207,47 +206,47 @@ int cerca_sem(int n_sem){
 int sys_sem_init(int n_sem, unsigned int value){
 	if(cerca_sem(n_sem) != -1) return -EBUSY; //ya existe sem
 	int i = cerca_sem_lliure();
-	struct semaphore s = semaphores[i];
-	s.n_sem = n_sem;
-	s.state = USED_SEM;
-	s.counter = value;
-	s.owner = current()->PID;
-	INIT_LIST_HEAD(&(s.blockedQueue));
+	struct semaphore *s = &semaphores[i];
+	s->n_sem = n_sem;
+	s->state = USED_SEM;
+	s->counter = value;
+	s->owner = current()->PID;
+	INIT_LIST_HEAD(&(s->blockedQueue));
 	return 0;
 }
 int sys_sem_destroy(int n_sem){
 	int i = cerca_sem(n_sem);
 	if(i == -1) return -EINVAL;
-	struct semaphore s = semaphores[i];
-	if(s.state == FREE_SEM) return -EINVAL;
-	if(s.owner != current()->PID) return -EPERM;
-	while(!list_empty(&(s.blockedQueue))){
+	struct semaphore *s = &semaphores[i];
+	if(s->state == FREE_SEM) return -EINVAL;
+	if(s->owner != current()->PID) return -EPERM;
+	while(!list_empty(&(s->blockedQueue))){
 		struct task_struct *tsUnblock = 
-			list_head_to_task_struct(list_first(&s.blockedQueue));
+			list_head_to_task_struct(list_first(&s->blockedQueue));
 		update_process_state_rr(tsUnblock, &readyqueue);
 	}
-	s.state = FREE_SEM;
-	s.n_sem = -1;
+	s->state = FREE_SEM;
+	s->n_sem = -1;
 	return 0;
 }
 int sys_sem_signal(int n_sem){
 	int i = cerca_sem(n_sem);
 	if(i == -1) return -EINVAL;
-	struct semaphore s = semaphores[n_sem];
-	if(s.state == FREE_SEM) return -EINVAL;
-	if(list_empty(&s.blockedQueue)) s.counter++;
-	else update_process_state_rr(list_head_to_task_struct(list_first(&s.blockedQueue)), &readyqueue);
+	struct semaphore *s = &semaphores[i];
+	if(s->state == FREE_SEM) return -EINVAL;
+	if(list_empty(&s->blockedQueue)) s->counter++;
+	else update_process_state_rr(list_head_to_task_struct(list_first(&s->blockedQueue)), &readyqueue);
 	return 1;
 }
 int sys_sem_wait(int n_sem){
 	int i = cerca_sem(n_sem);
 	if(i == -1) return -EINVAL;
-	struct semaphore s = semaphores[n_sem];
-	if(s.state == FREE_SEM) return -EINVAL;
-	if(s.counter <= 0){
-		exitRunCurrent(&s.blockedQueue);
+	struct semaphore *s = &semaphores[i];
+	if(s->state == FREE_SEM) return -EINVAL;
+	if(s->counter <= 0){
+		exitRunCurrent(&s->blockedQueue);
 		sched_next_rr();
 	}
-	else s.counter--;
+	else s->counter--;
 	return 0;
 }
