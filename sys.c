@@ -127,7 +127,6 @@ int sys_gettime(){
 }
 void sys_exit()
 {	
-	current()->PID = -1;
 	--refs_DIR[get_DIR_position(current())];
 	if(refs_DIR[get_DIR_position(current())] == 0){
 		page_table_entry * pt = get_PT(current());	
@@ -139,7 +138,7 @@ void sys_exit()
 	list_add_tail(&(current()->list), &freequeue);
 	for(int i = 0; i < 20; ++i)
 		if(semaphores[i].owner == current()->PID) sys_sem_destroy(semaphores[i].n_sem);
-	
+	current()->PID = -1;
 	update_process_state_rr(current(), &freequeue);
 	sched_next_rr();
 }
@@ -236,7 +235,7 @@ int sys_sem_signal(int n_sem){
 	if(s->state == FREE_SEM) return -EINVAL;
 	if(list_empty(&s->blockedQueue)) s->counter++;
 	else update_process_state_rr(list_head_to_task_struct(list_first(&s->blockedQueue)), &readyqueue);
-	return 1;
+	return 0;
 }
 int sys_sem_wait(int n_sem){
 	int i = cerca_sem(n_sem);
