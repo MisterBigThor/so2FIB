@@ -185,6 +185,7 @@ int sys_clone(void (*function)(void), void *stack){
 
 	return tsThread->PID;
 }
+
 int cerca_sem_lliure(){
 	struct semaphore s;	
 	for(int i = 0; i<20; ++i){
@@ -222,10 +223,12 @@ int sys_sem_destroy(int n_sem){
 	while(!list_empty(&(s->blockedQueue))){
 		struct task_struct *tsUnblock = 
 			list_head_to_task_struct(list_first(&s->blockedQueue));
+		tsUnblock->sem_ret = -1;			
 		update_process_state_rr(tsUnblock, &readyqueue);
 	}
 	s->state = FREE_SEM;
 	s->n_sem = -1;
+	s->owner = 0;
 	return 0;
 }
 int sys_sem_signal(int n_sem){
@@ -242,9 +245,11 @@ int sys_sem_wait(int n_sem){
 	if(i == -1) return -EINVAL;
 	struct semaphore *s = &semaphores[i];
 	if(s->state == FREE_SEM) return -EINVAL;
+	current()->sem_ret = 0;
 	if(s->counter <= 0){
 		exitRunCurrent(&s->blockedQueue);
 		sched_next_rr();
+		return current()->sem_ret;
 	}
 	else s->counter--;
 	return 0;

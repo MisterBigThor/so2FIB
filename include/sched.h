@@ -24,6 +24,7 @@ struct task_struct {
 	enum state_t estado;
 	struct stats estadisticas;
 	int n_directorio;
+	int sem_ret;
 	int quantum;
 };
 
