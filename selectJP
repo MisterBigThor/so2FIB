@@ -5,7 +5,8 @@ echo 1.JpE1
 echo 2.JpE2 
 echo 3.JpE3Semaphores
 echo 4.JpE3Clone 
-echo 5.JpE4
+echo 5.JpE4Read
+echo 6.JpE4Sbrk
 echo ===========================
 
 read op
@@ -27,7 +28,15 @@ case $op in
 		rm libjp.a
 		ln -s E3/libjpclone.a libjp.a
 		;;
-	5) echo notImplemented;;
+	5)	
+		rm libjp.a
+		ln -s E4/libjpread.a libjp.a
+		;;
+	6)
+		rm libjp.a
+		ln -s E4/libjpsbrk.a libjp.a
+		;;
+
 esac
 
 make clean
