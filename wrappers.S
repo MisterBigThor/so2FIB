@@ -62,6 +62,19 @@ read.noError:
 	pop %ebp;
 	ret;
 
+ENTRY(sbrk)
+	push %ebp;
+	movl %esp, %ebp;
+	push %ebx;
+	movl 8(%ebp), %ebx
+	SYSCALL(31)
+	CHECK_ERROR(sbrk.noError);
+sbrk.noError:
+	pop %ebx;
+	pop %ebp;
+	ret;
+
+
 
 ENTRY(write)
 	//enllaç dinàmic

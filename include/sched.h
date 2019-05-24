@@ -29,6 +29,7 @@ struct task_struct {
 	int sem_ret;
 	int quantum;
 	int readKeys, requiredKeys;
+	unsigned long processBreak;
 };
 
 union task_union {

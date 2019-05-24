@@ -262,3 +262,48 @@ int sys_sem_wait(int n_sem){
 	else s->counter--;
 	return 0;
 }
+
+void *sys_sbrk(int incr){
+	void *previousProgramBreak = (void *) current()->processBreak;
+	page_table_entry *TP = get_PT(current());
+	if(current()->processBreak + incr < HEAP_START)
+		incr = HEAP_START - current()->processBreak;
+	int iPage = current()->processBreak >> 12;
+	int fPage = (current()->processBreak + incr) >> 12;
+	if(fPage > TOTAL_PAGES) return (void *) -ENOMEM;
+
+	int aux;
+	if((current()->processBreak + incr)%PAGE_SIZE == 0) aux = 0; 
+	else aux = 1; //pagina extra
+
+	if(incr > 0){
+		for(int i = iPage; i < (fPage + aux) ; i++){
+			if(TP[i].bits.present){
+				int pagF;
+				if((pagF = alloc_frame())>= 0) set_ss_pag(TP, i, pagF);
+				else {
+					for(int j = i; j > (iPage+aux); j--){
+						free_frame(get_frame(TP, j));
+						del_ss_pag(TP, j);
+					}
+					return (void *) -ENOMEM;
+				}
+			}
+		}
+	}
+	else if(incr < 0){
+		for(int i = iPage; i>fPage+aux; i--){
+			if(i<PAG_LOG_INIT_HEAP){
+				current()->processBreak = HEAP_START;
+				set_cr3(get_DIR(current()));
+				return (void *) -EFAULT;
+			}
+			free_frame(get_frame(TP, i));
+			del_ss_pag(TP, i);
+		}
+		set_cr3(get_DIR(current()));
+	}
+
+	current()->processBreak += incr;
+	return previousProgramBreak;
+}

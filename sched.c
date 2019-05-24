@@ -152,6 +152,7 @@ void init_idle (void)
 	tu->stack[KERNEL_STACK_SIZE - 2] = 0;
 
 	tu->task.kernel_esp = (char *)& (tu->stack[KERNEL_STACK_SIZE - 2]);		
+	ts->processBreak = HEAP_START;
 	idle_task = ts; 
 }
 
@@ -165,6 +166,7 @@ void init_task1(void)
 	ts->PID = 1;
 	ts->quantum = DEFAULT_QUANTUM;
 	ts->estado = ST_RUN;
+	ts->processBreak = HEAP_START;
 	qLeft = ts->quantum;
 
 	init_stats(&ts->estadisticas);
@@ -175,6 +177,8 @@ void init_task1(void)
 	tss.esp0=(DWord)& (tu->stack[KERNEL_STACK_SIZE]);
 	writeMsr(0x175, KERNEL_ESP(tu)); 
 	set_cr3(ts->dir_pages_baseAddr);
+
+
 }
 
 
