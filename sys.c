@@ -17,6 +17,8 @@
 
 #include <semaphores.h>
 
+#include <cirBuffer.h>
+
 #define LECTURA 0
 #define ESCRIPTURA 1
 #define TAMWRITE 4
@@ -34,8 +36,9 @@ unsigned long getEbp();
 
 int check_fd(int fd, int permissions)
 {
-	if (fd!=1) return -EBADF; /*EBADF*/
-	if (permissions!=ESCRIPTURA) return -EACCES; /*EACCES*/
+	if (fd!=1 && fd != 0) return -EBADF; /*EBADF*/
+	if (permissions!=ESCRIPTURA && fd == 1) return -EACCES; /*EACCES*/
+	if (permissions!=LECTURA && fd == 0) return -EACCES; /*EACCES*/
 	return 0;
 }
 
@@ -125,8 +128,7 @@ int sys_write(int fd, char * buffer, int size){
 int sys_gettime(){
 	return zeos_ticks;
 }
-void sys_exit()
-{	
+void sys_exit(){	
 	--refs_DIR[get_DIR_position(current())];
 	if(refs_DIR[get_DIR_position(current())] == 0){
 		page_table_entry * pt = get_PT(current());	
@@ -143,7 +145,13 @@ void sys_exit()
 	sched_next_rr();
 }
 
-
+int sys_read(int fd, char *buf, int count){
+	if(buf == NULL) return -EFAULT;
+	if(count < 0) return -EINVAL;
+	if(check_fd(fd, LECTURA) < 0) return -EBADF;
+	if(!access_ok(VERIFY_WRITE, buf, count)) return -EFAULT;
+	return sys_read_keyboard(buf, count);
+}
 int sys_get_stats(int pid, struct stats *st){
 	if(pid < 0) return -EINVAL;
 	if(!access_ok(VERIFY_WRITE, st, sizeof(struct stats))) return -EFAULT;

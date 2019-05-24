@@ -48,6 +48,20 @@ write.no_error:
 	pop %ebp;
 	ret;
 
+ENTRY(read)
+	push %ebp;
+	movl %esp, %ebp;
+	push %ebx;
+	movl 8(%ebp), %ebx
+	movl 12(%ebp), %ecx
+	movl 16(%ebp), %edx
+	SYSCALL(30);
+	CHECK_ERROR(read.noError);
+read.noError:
+	pop %ebx;
+	pop %ebp;
+	ret;
+
 
 ENTRY(write)
 	//enllaç dinàmic

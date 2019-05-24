@@ -14,6 +14,7 @@ union task_union task[NR_TASKS]
 
 struct list_head freequeue;
 struct list_head readyqueue;
+struct list_head keyboardqueue;
 
 unsigned long getEbp();
 void setEsp();
@@ -67,7 +68,7 @@ void cpu_idle(void)
 	}
 }
 
-#define DEFAULT_QUANTUM 5
+#define DEFAULT_QUANTUM 15
 int qLeft;
 struct task_struct * idle_task= NULL; //global variable for easy access.
 
@@ -77,9 +78,14 @@ void update_sched_data_rr(){
 }
 //necesary change process
 int needs_sched_rr(){
-	int r = (qLeft <= 0 && !list_empty(&readyqueue));
-	if(r) current()->estadisticas.total_trans++;
-	return r;
+
+	int pWaiting = !list_empty(&readyqueue);
+	if(pWaiting && qLeft ==0) return 1;
+	if(!pWaiting && qLeft == 0){
+		current()->estadisticas.total_trans++;
+		qLeft = get_quantum(current());
+	}
+	return 0;
 }
 //update state current
 void update_process_state_rr(struct task_struct*t, struct list_head *dst_queue){
@@ -103,7 +109,7 @@ void sched_next_rr(void){
 		qLeft = get_quantum(nextt);
 
 		struct stats *st;
-		st = &current()->estadisticas; //antiguo
+		st = &nextt->estadisticas; //antiguo
 		st->system_ticks += get_ticks() - st->elapsed_total_ticks;
 		st->elapsed_total_ticks = get_ticks();
 		st = &nextt->estadisticas; //nuevo
@@ -176,7 +182,7 @@ void inner_task_switch(union task_union*t){
 	tss.esp0 = KERNEL_ESP(t);
 	writeMsr(0x175, (int)KERNEL_ESP(t));
 	
-	set_cr3(get_DIR(t)); //??
+	set_cr3(get_DIR((struct task_struct*)t)); //??
 	
 	current() -> kernel_esp = (char *) getEbp();
 
@@ -186,6 +192,7 @@ void inner_task_switch(union task_union*t){
 }
 
 void init_sched(){
+	INIT_LIST_HEAD(& keyboardqueue);
 	INIT_LIST_HEAD(& freequeue);
 	for(int i = 0; i < NR_TASKS; ++i){	
 		task[i].task.PID = -1;
@@ -228,10 +235,10 @@ void statsLeaveSys(){
 }
 
 int get_quantum(struct task_struct *t){	
-	return t->quantum;
+	return current()->quantum;
 }
 void set_quantum(struct task_struct *t,int q){
-	t->quantum = q;
+	current()->quantum = q;
 }
 void init_stats(struct stats *st){
 	st->user_ticks = 0;

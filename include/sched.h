@@ -11,6 +11,8 @@
 #include <stats.h>
 #include <utils.h>
 
+#include <cirBuffer.h>
+
 #define NR_TASKS      15
 #define KERNEL_STACK_SIZE	1024
 
@@ -26,6 +28,7 @@ struct task_struct {
 	int n_directorio;
 	int sem_ret;
 	int quantum;
+	int readKeys, requiredKeys;
 };
 
 union task_union {
@@ -34,7 +37,7 @@ union task_union {
 };
 
 extern union task_union task[NR_TASKS]; /* Vector de tasques */
-
+extern struct list_head keyboardqueue;
 int refs_DIR[NR_TASKS];
 
 void writeMsr();

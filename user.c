@@ -4,7 +4,7 @@ char buff[24];
 unsigned long stackClone[120];
 int pid;
 
-#define MODE_USER 0
+#define MODE_USER 455
 
 void doStuff(){
 	char buffS[12];
@@ -56,7 +56,13 @@ main(void)
 		sem_init(2, 0);
 		sem_init(2, 0);
 	}
-
+	else if(MODE_USER == 4){
+		char readBuff[40];
+		int r = read(0,readBuff, 1);
+		itoa(r, buff);
+		writefast(1,buff, strlen(buff));
+		writefast(1,readBuff, strlen(readBuff));
+	}
 	else{
 		runjp();
 		//runjp_rank(0,0);

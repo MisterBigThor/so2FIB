@@ -7,6 +7,8 @@
 #include <hardware.h>
 #include <io.h>
 
+#include <system.h>
+#include <sched.h>
 #include <zeos_interrupt.h>
 
 Gate idt[IDT_ENTRIES];
@@ -35,17 +37,20 @@ char char_map[] =
 void keyboard_rutine(){
 	unsigned char entrada = inb(0x60);
 	unsigned char MakeOrBreak = entrada >> 7;
-	//8 bits -> 	1111 1111
-	//				m<--data>
-	//port 0x60 -> 	1010 0101
-	//and	        0111 1111 == 7f
  	unsigned char ScanCode = entrada & 0x7f ;
 	if(!MakeOrBreak){ //make 0, break 1
 		char c = char_map[ScanCode];
 		if(c == '\0') printc_xy(0x00, 0x00, 'C');
 		else printc_xy(0x00, 0x00, c);
+    cirBuffWrite(&keyboardBuff, c);
+    if(!list_empty(& keyboardqueue)){
+      struct list_head * l = list_first(&keyboardqueue);
+      struct task_struct *ts = list_head_to_task_struct(l);
+      if(cirBuffFull(&keyboardBuff) || 
+        cirBuffLenght(&keyboardBuff)>= ts->requiredKeys - ts->readKeys)
+        update_process_state_rr(ts, &readyqueue);
+    }
 	}
-  //task_switch((union task_union*)idle_task);
 	return;
 
 }

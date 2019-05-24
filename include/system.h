@@ -11,6 +11,8 @@
 
 extern struct semaphore semaphores[20];
 
+extern struct cirBuffer keyboardBuff;
+
 extern TSS         tss;
 extern Descriptor* gdt;
 
